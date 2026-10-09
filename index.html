@@ -180,85 +180,148 @@
 </body>
 </html>
 ```
+
 <style>
-  @media (hover: hover) and (pointer: fine) {
-    body,
-    a,
-    button {
-      cursor: none !important;
-    }
-
-    #cosmic-cursor {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 20px;
-      height: 20px;
-      border: 2px solid #c4a0ff;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 99999;
-      transform: translate(-50%, -50%);
-      box-shadow: 0 0 12px #a855f7,
-                  0 0 28px #7c3aed66;
-      transition: width .2s, height .2s,
-                  border-color .2s;
-    }
-
-    #cosmic-cursor::before {
-      content: "";
-      position: absolute;
-      inset: 5px;
-      background: #e9d5ff;
-      border-radius: 50%;
-      box-shadow: 0 0 12px #c084fc;
-    }
-
-    #cosmic-cursor .orbit {
-      position: absolute;
-      inset: -7px;
-      border: 1px dashed #a78bfa;
-      border-radius: 50%;
-      animation: cosmic-spin 4s linear infinite;
-    }
-
-    #cosmic-cursor.hovering {
-      width: 38px;
-      height: 38px;
-      border-color: #f0abfc;
-      box-shadow: 0 0 20px #c084fc,
-                  0 0 40px #9333ea88;
-    }
-
-    .cosmic-particle {
-      position: fixed;
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: #d8b4fe;
-      box-shadow: 0 0 10px #a855f7;
-      pointer-events: none;
-      z-index: 99998;
-      animation: particle-fade .55s ease-out forwards;
-    }
-
-    @keyframes cosmic-spin {
-      to { transform: rotate(360deg); }
-    }
-
-    @keyframes particle-fade {
-      to {
-        opacity: 0;
-        transform: scale(0.1);
-      }
-    }
+@media (hover: hover) and (pointer: fine) {
+  html, body, body * {
+    cursor: none !important;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    #cosmic-cursor .orbit {
-      animation: none;
+  #cosmic-orb {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 24px;
+    height: 24px;
+    z-index: 999999;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+    filter: drop-shadow(0 0 8px #a855f7);
+    transition: opacity .25s, filter .3s;
+    will-change: left, top;
+  }
+
+  #cosmic-orb.visible {
+    opacity: 1;
+  }
+
+  #cosmic-orb .core {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    left: 7px;
+    top: 7px;
+    border-radius: 50%;
+    background: #f3e8ff;
+    box-shadow:
+      0 0 5px #fff,
+      0 0 12px #d8b4fe,
+      0 0 24px #a855f7,
+      0 0 40px #7c3aed;
+    animation: orb-pulse 2s ease-in-out infinite;
+  }
+
+  #cosmic-orb .arc {
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 10deg,
+      transparent 0deg 28deg,
+      #c084fc 38deg 105deg,
+      transparent 118deg 190deg,
+      #e9d5ff 205deg 248deg,
+      transparent 260deg 360deg
+    );
+    -webkit-mask: radial-gradient(
+      farthest-side,
+      transparent calc(100% - 1.5px),
+      #000 calc(100% - 1px)
+    );
+    mask: radial-gradient(
+      farthest-side,
+      transparent calc(100% - 1.5px),
+      #000 calc(100% - 1px)
+    );
+    filter: drop-shadow(0 0 4px #a855f7);
+    animation: arc-spin 3s linear infinite;
+  }
+
+  #cosmic-orb .arc-two {
+    inset: -8px -3px;
+    transform: rotate(-35deg) scaleY(.7);
+    background: conic-gradient(
+      from 100deg,
+      transparent 0deg 65deg,
+      #e879f9 75deg 145deg,
+      transparent 155deg 270deg,
+      #a78bfa 282deg 320deg,
+      transparent 330deg 360deg
+    );
+    animation: arc-reverse 4.5s linear infinite;
+  }
+
+  #cosmic-orb.hovering {
+    filter:
+      drop-shadow(0 0 12px #d8b4fe)
+      drop-shadow(0 0 24px #9333ea);
+  }
+
+  #cosmic-orb.hovering .core {
+    box-shadow:
+      0 0 8px white,
+      0 0 18px #e9d5ff,
+      0 0 35px #c084fc,
+      0 0 55px #9333ea;
+  }
+
+  .cosmic-particle {
+    position: fixed;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 999998;
+    background: #e9d5ff;
+    box-shadow:
+      0 0 6px #d8b4fe,
+      0 0 13px #9333ea;
+    animation: particle-burst .7s ease-out forwards;
+  }
+
+  @keyframes arc-spin {
+    to { rotate: 360deg; }
+  }
+
+  @keyframes arc-reverse {
+    to { rotate: -360deg; }
+  }
+
+  @keyframes orb-pulse {
+    0%, 100% { scale: .88; opacity: .85; }
+    50% { scale: 1.12; opacity: 1; }
+  }
+
+  @keyframes particle-burst {
+    0% {
+      opacity: .95;
+      scale: 1;
+    }
+    100% {
+      opacity: 0;
+      scale: .1;
+      translate: var(--drift-x) var(--drift-y);
     }
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #cosmic-orb .core,
+  #cosmic-orb .arc {
+    animation: none !important;
+  }
+}
 </style>
 
 <script>
@@ -267,40 +330,79 @@
     "(hover: hover) and (pointer: fine)"
   ).matches) return;
 
-  const cursor = document.createElement("div");
-  cursor.id = "cosmic-cursor";
-  cursor.innerHTML = '<span class="orbit"></span>';
-  document.body.appendChild(cursor);
+  function initCosmicOrb() {
+    if (document.getElementById("cosmic-orb")) return;
 
-  let lastParticle = 0;
+    const orb = document.createElement("div");
+    orb.id = "cosmic-orb";
+    orb.innerHTML = `
+      <span class="arc"></span>
+      <span class="arc arc-two"></span>
+      <span class="core"></span>
+    `;
+    document.body.appendChild(orb);
 
-  document.addEventListener("mousemove", (event) => {
-    cursor.style.left = event.clientX + "px";
-    cursor.style.top = event.clientY + "px";
+    let targetX = -100, targetY = -100;
+    let currentX = targetX, currentY = targetY;
+    let lastParticle = 0;
 
-    if (Date.now() - lastParticle < 35) return;
-    lastParticle = Date.now();
+    document.addEventListener("mousemove", (e) => {
+      targetX = e.clientX;
+      targetY = e.clientY;
+      orb.classList.add("visible");
 
-    const particle = document.createElement("span");
-    particle.className = "cosmic-particle";
-    particle.style.left = event.clientX + "px";
-    particle.style.top = event.clientY + "px";
-    document.body.appendChild(particle);
+      const now = performance.now();
+      if (now - lastParticle < 35) return;
+      lastParticle = now;
 
-    setTimeout(() => particle.remove(), 600);
-  });
+      const particle = document.createElement("span");
+      particle.className = "cosmic-particle";
+      particle.style.left = targetX + "px";
+      particle.style.top = targetY + "px";
+      particle.style.setProperty(
+        "--drift-x",
+        (Math.random() * 36 - 18) + "px"
+      );
+      particle.style.setProperty(
+        "--drift-y",
+        (Math.random() * 36 - 18) + "px"
+      );
 
-  document.querySelectorAll(
-    "a, button, input, textarea, select"
-  ).forEach((element) => {
-    element.addEventListener("mouseenter", () => {
-      cursor.classList.add("hovering");
+      document.body.appendChild(particle);
+      setTimeout(() => particle.remove(), 750);
     });
 
-    element.addEventListener("mouseleave", () => {
-      cursor.classList.remove("hovering");
+    document.addEventListener("mouseout", (e) => {
+      if (!e.relatedTarget) orb.classList.remove("visible");
     });
-  });
+
+    document.addEventListener("mouseover", (e) => {
+      if (e.target.closest(
+        "a, button, input, textarea, select, [role='button']"
+      )) {
+        orb.classList.add("hovering");
+      } else {
+        orb.classList.remove("hovering");
+      }
+    });
+
+    function animate() {
+      currentX += (targetX - currentX) * 0.22;
+      currentY += (targetY - currentY) * 0.22;
+      orb.style.left = currentX + "px";
+      orb.style.top = currentY + "px";
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded", initCosmicOrb, { once: true }
+    );
+  } else {
+    initCosmicOrb();
+  }
 })();
 </script>
-```
