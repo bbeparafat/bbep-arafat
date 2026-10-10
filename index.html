@@ -92,22 +92,77 @@
       transform: translateY(-3px);
     }
 
-    .about {
-      padding: 65px 20px;
-      text-align: center;
-    }
+  .about {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 320px;
+  padding: 80px 20px;
+  text-align: center;
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(124, 58, 237, 0.25), transparent 55%),
+    #080810;
+}
 
-    .about h2 {
-      font-size: 32px;
-      margin-bottom: 18px;
-    }
+.about::before,
+.about::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(2px 2px at 25px 40px, rgba(255, 255, 255, 0.95) 99%, transparent 100%),
+    radial-gradient(1px 1px at 85px 125px, rgba(196, 181, 253, 0.9) 99%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 165px 70px, rgba(255, 255, 255, 0.8) 99%, transparent 100%);
+  background-size: 220px 200px;
+  opacity: 0.55;
+  animation: galaxy-drift 55s linear infinite;
+}
 
-    .about p {
-      max-width: 600px;
-      margin: auto;
-      color: #b8b8c9;
-      line-height: 1.8;
-    }
+.about::after {
+  background-size: 300px 250px;
+  opacity: 0.35;
+  animation-duration: 85s;
+  animation-direction: reverse;
+}
+
+.about-card {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  margin: auto;
+  padding: 30px 26px;
+  border: 1px solid rgba(196, 181, 253, 0.28);
+  border-radius: 18px;
+  background: rgba(12, 10, 25, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.about h2 {
+  font-size: 32px;
+  margin-bottom: 18px;
+}
+
+.about p {
+  max-width: 600px;
+  margin: auto;
+  color: #d0cedb;
+  line-height: 1.8;
+}
+
+@keyframes galaxy-drift {
+  to {
+    transform: translate3d(-120px, -90px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about::before,
+  .about::after {
+    animation: none;
+  }
+}
 
     footer {
       padding: 25px;
@@ -155,15 +210,14 @@
   
     </section>
 
-    <section class="about" id="about">
-      <h2>About Me</h2>
-
-      <p>
-        Welcome to my official website.
-        This is where music, creativity and technology
-        come together. More exciting projects are coming soon.
-      </p>
-    </section>
+  <section class="about" id="about">
+  <div class="about-card">
+    <h2>About Me</h2>
+    <p>
+      My name is ARAFAT IBNEY ARIF, and I live in Cumilla. I'm a professional funk and phonk music producer, creating original tracks in Bangla, English, and Brazilian Portuguese. I hope you enjoy my music!
+    </p>
+  </div>
+</section>
   </main>
 
   <footer>
