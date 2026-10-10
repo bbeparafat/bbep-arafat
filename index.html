@@ -163,7 +163,96 @@
     animation: none;
   }
 }
+.about-card {
+  position: relative;
+  isolation: isolate;
+  transition: transform 0.8s ease, opacity 0.8s ease, filter 0.8s ease;
+  will-change: transform, opacity, filter;
+}
 
+.about-card::before {
+  content: "";
+  position: absolute;
+  inset: -14px -22px;
+  border: 1px solid rgba(196, 181, 253, 0.55);
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+  pointer-events: none;
+  z-index: -1;
+  animation: orbit-loop 14s linear infinite;
+}
+
+.about-card.is-away {
+  opacity: 0;
+  filter: blur(3px);
+  transform: translate3d(var(--fly-x, 90px), var(--fly-y, -100px), 0)
+    rotate(var(--fly-turn, 10deg)) scale(0.86);
+}
+
+.about h2 {
+  position: relative;
+  display: inline-block;
+  color: transparent;
+  background: linear-gradient(90deg, #fff, #d8b4fe, #93c5fd, #fff);
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: title-shimmer 6s linear infinite, text-float 5s ease-in-out infinite;
+}
+
+.about h2::after {
+  content: "";
+  display: block;
+  width: 120px;
+  height: 14px;
+  margin: 12px auto 0;
+  background: repeating-linear-gradient(
+    90deg,
+    #c084fc 0 4px,
+    transparent 4px 9px
+  );
+  animation: music-wave 1.4s ease-in-out infinite alternate;
+}
+
+.about p {
+  color: #ece8ff;
+  text-shadow: 0 0 12px rgba(167, 139, 250, 0.25);
+  animation: text-float 6s ease-in-out infinite reverse;
+}
+
+@keyframes orbit-loop {
+  from { transform: rotate(-8deg) scaleY(0.72); }
+  to { transform: rotate(352deg) scaleY(0.72); }
+}
+
+@keyframes title-shimmer {
+  to { background-position: 250% center; }
+}
+
+@keyframes text-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes music-wave {
+  from { transform: scaleY(0.45); opacity: 0.6; }
+  to { transform: scaleY(1); opacity: 1; }
+}
+
+@media (max-width: 500px) {
+  .about-card::before {
+    inset: -10px -8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-card::before,
+  .about h2,
+  .about h2::after,
+  .about p {
+    animation: none !important;
+  }
+}
     footer {
       padding: 25px;
       text-align: center;
