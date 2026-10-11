@@ -312,9 +312,44 @@
   <footer>
     © 2026 BBEP Arafat. All rights reserved.
   </footer>
+<script>
+(() => {
+  const section = document.querySelector("#about");
+  const card = section?.querySelector(".about-card");
+
+  if (!section || !card) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  let previousY = window.scrollY;
+  let direction = "down";
+
+  window.addEventListener("scroll", () => {
+    const currentY = window.scrollY;
+    if (currentY !== previousY) {
+      direction = currentY > previousY ? "down" : "up";
+    }
+    previousY = currentY;
+  }, { passive: true });
+
+  const observer = new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting) {
+      card.classList.remove("is-away");
+      return;
+    }
+
+    const goingDown = direction === "down";
+    card.style.setProperty("--fly-x", goingDown ? "120px" : "-120px");
+    card.style.setProperty("--fly-y", goingDown ? "-100px" : "100px");
+    card.style.setProperty("--fly-turn", goingDown ? "10deg" : "-10deg");
+    card.classList.add("is-away");
+  }, { threshold: 0.18 });
+
+  observer.observe(section);
+})();
+</script>
 </body>
 </html>
-```
+
 
 <style>
 @media (hover: hover) and (pointer: fine) {
