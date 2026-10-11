@@ -58,18 +58,23 @@
     <span class="toggle-waves" aria-hidden="true"><i></i><i></i><i></i></span>
   </button>
   <aside class="music-panel" id="music-panel" aria-label="Music player" hidden>
-    <div class="music-heading"><div><span class="panel-kicker">BBEP ARAFAT / MUSIC</span><h2>Your soundtrack.</h2></div><button type="button" id="close-music" class="icon-button" aria-label="Close or minimize player">×</button></div>
+    <div class="music-heading"><div><span class="panel-kicker">BBEP ARAFAT / MUSIC</span><h2>Your soundtrack.</h2></div><button type="button" id="close-music" class="icon-button" aria-label="Close music panel; music keeps playing">×</button></div>
     <p class="music-status" id="music-status" role="status" aria-live="polite">Choose a track to start. Sound is off.</p>
-    <div class="video-shell"><div id="youtube-player"><div class="player-placeholder"><span aria-hidden="true">♫</span><p>Select a song below</p><small>YouTube video player</small></div></div></div>
-    <div class="playback-controls"><button type="button" id="play-pause" disabled>▶ Play</button><button type="button" id="stop-music" disabled>■ Off</button><a id="youtube-link" href="https://www.youtube.com/watch?v=Fvt9hEAP6oQ" target="_blank" rel="noopener noreferrer">YouTube ↗</a></div>
+    <div class="audio-card">
+      <div class="audio-art" aria-hidden="true"><span>♫</span><div class="audio-bars"><i></i><i></i><i></i><i></i><i></i></div></div>
+      <div class="audio-description"><span class="audio-kicker">NOW SELECTED</span><p id="current-track">Choose your soundtrack</p><span id="playback-badge">SOUND OFF</span></div>
+    </div>
+    <audio id="music-audio" preload="none" loop></audio>
+    <div class="seek-row"><label class="sr-only" for="seek">Seek within current song</label><input type="range" id="seek" min="0" max="1000" value="0" disabled><div class="time-row"><span id="elapsed">0:00</span><span id="duration">0:00</span></div></div>
+    <div class="playback-controls"><button type="button" id="play-pause" disabled>▶ Play</button><button type="button" id="stop-music" disabled>■ Off</button><span class="repeat-label">REPEAT ONE ↻</span></div>
     <label class="volume-label" for="volume">Volume <input type="range" id="volume" min="0" max="100" value="55"><output id="volume-value" for="volume">55%</output></label>
-    <div class="track-list-area"><div class="list-heading"><span>6 TRACKS · SCROLL</span><span>REPEAT ONE ↻</span></div><ol class="track-list"><li><button type="button" class="track" data-index="0" aria-pressed="false"><span class="track-number">01</span><span class="track-name">Golden Brown X Love Story (slowed) Remix</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
+    <div class="track-list-area"><div class="list-heading"><span>6 TRACKS · SCROLL</span><span>YOUR SELECTION</span></div><ol class="track-list"><li><button type="button" class="track" data-index="0" aria-pressed="false"><span class="track-number">01</span><span class="track-name">Golden Brown X Love Story (slowed) Remix</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
 <li><button type="button" class="track" data-index="1" aria-pressed="false"><span class="track-number">02</span><span class="track-name">Golden Brown (Piano)</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
 <li><button type="button" class="track" data-index="2" aria-pressed="false"><span class="track-number">03</span><span class="track-name">🟣 MONTAGEM GRAVE | BRAZILIAN PHONK</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
 <li><button type="button" class="track" data-index="3" aria-pressed="false"><span class="track-number">04</span><span class="track-name">MINHA AURA Phonk</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
 <li><button type="button" class="track" data-index="4" aria-pressed="false"><span class="track-number">05</span><span class="track-name">Montagem Taca O Grave (BBEP Arafat)</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
 <li><button type="button" class="track" data-index="5" aria-pressed="false"><span class="track-number">06</span><span class="track-name">Olha na Minha Cara (Normal)</span><span class="track-mark" aria-hidden="true">▷</span></button></li></ol></div>
-    <p class="repeat-note">Your choice repeats until you change it or switch it off.</p>
+    <p class="repeat-note">× closes this panel, not the music. Use Off to stop.</p>
   </aside>
 
 </body>

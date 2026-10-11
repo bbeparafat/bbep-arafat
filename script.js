@@ -118,9 +118,10 @@
 })();
 
 
-const MUSIC_TRACKS = [{"id": "Fvt9hEAP6oQ", "title": "Golden Brown X Love Story (slowed) Remix"}, {"id": "lB_xwdRpbks", "title": "Golden Brown (Piano)"}, {"id": "ce0hPik4VDs", "title": "🟣 MONTAGEM GRAVE | BRAZILIAN PHONK"}, {"id": "U2uTS1LEEns", "title": "MINHA AURA Phonk"}, {"id": "FcvEnXHLUo4", "title": "Montagem Taca O Grave (BBEP Arafat)"}, {"id": "AmObdJ8cWkk", "title": "Olha na Minha Cara (Normal)"}];
+const MUSIC_TRACKS = [{"title": "Golden Brown X Love Story (slowed) Remix", "src": "track-01.mp3"}, {"title": "Golden Brown (Piano)", "src": "track-02.mp3"}, {"title": "🟣 MONTAGEM GRAVE | BRAZILIAN PHONK", "src": "track-03.mp3"}, {"title": "MINHA AURA Phonk", "src": "track-04.mp3"}, {"title": "Montagem Taca O Grave (BBEP Arafat)", "src": "track-05.mp3"}, {"title": "Olha na Minha Cara (Normal)", "src": "track-06.mp3"}];
 
 (() => {
+  const audio = document.getElementById('music-audio');
   const panel = document.getElementById('music-panel');
   const toggle = document.getElementById('music-toggle');
   const close = document.getElementById('close-music');
@@ -128,138 +129,127 @@ const MUSIC_TRACKS = [{"id": "Fvt9hEAP6oQ", "title": "Golden Brown X Love Story 
   const playPause = document.getElementById('play-pause');
   const stop = document.getElementById('stop-music');
   const volume = document.getElementById('volume');
-  const link = document.getElementById('youtube-link');
+  const seek = document.getElementById('seek');
+  const elapsed = document.getElementById('elapsed');
+  const duration = document.getElementById('duration');
+  const currentTrack = document.getElementById('current-track');
+  const badge = document.getElementById('playback-badge');
   const rows = [...document.querySelectorAll('.track')];
-  let player, selected = -1, active = false, playing = false, pending = false, apiPromise;
+  let selected = -1, mode = 'off', request = 0;
+  audio.volume = Number(volume.value) / 100;
+  audio.loop = true;
 
   function showPanel() {
     panel.hidden = false;
-    panel.classList.remove('compact');
+    panel.scrollTop = 0;
     toggle.setAttribute('aria-expanded', 'true');
-    toggle.setAttribute('aria-label', 'Minimize music player');
+    toggle.setAttribute('aria-label', 'Close music panel; music keeps playing');
   }
-  function minimize() {
-    if (active || pending) {
-      // Never hide a playing YouTube video. Keep the official player visible.
-      panel.classList.add('compact');
-      toggle.setAttribute('aria-expanded', 'false');
-      toggle.setAttribute('aria-label', 'Expand music player');
-    } else {
-      panel.hidden = true;
-      toggle.setAttribute('aria-expanded', 'false');
-      toggle.setAttribute('aria-label', 'Open music player');
-    }
+  function hidePanel() {
+    // Only the panel is hidden. Do not pause, unload or destroy the audio.
+    panel.hidden = true;
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', audio.paused ? 'Open music player' : 'Open music player; music is playing');
     toggle.focus();
   }
-  toggle.addEventListener('click', () => {
-    if (panel.hidden || panel.classList.contains('compact')) showPanel();
-    else minimize();
-  });
-  close.addEventListener('click', minimize);
+  toggle.addEventListener('click', () => panel.hidden ? showPanel() : hidePanel());
+  close.addEventListener('click', hidePanel);
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && !panel.hidden) minimize();
+    if (e.key === 'Escape' && !panel.hidden) hidePanel();
   });
 
-  function loadAPI() {
-    if (window.YT?.Player) return Promise.resolve();
-    if (apiPromise) return apiPromise;
-    apiPromise = new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error('YouTube did not load. Check your connection, then try again.')), 20000);
-      window.onYouTubeIframeAPIReady = () => { clearTimeout(timeout); resolve(); };
-      const script = document.createElement('script');
-      script.src = 'https://www.youtube.com/iframe_api';
-      script.onerror = () => { clearTimeout(timeout); reject(new Error('Unable to load YouTube. Try the YouTube link.')); };
-      document.head.appendChild(script);
-    }).catch(e => { apiPromise = null; throw e; });
-    return apiPromise;
+  function timeLabel(seconds) {
+    if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+    return Math.floor(seconds / 60) + ':' + String(Math.floor(seconds % 60)).padStart(2, '0');
   }
-  function updateButtons() {
-    playPause.disabled = !player || pending;
-    stop.disabled = !player && !pending;
+  function updateTime() {
+    const valid = Number.isFinite(audio.duration) && audio.duration > 0;
+    seek.disabled = !valid;
+    elapsed.textContent = timeLabel(audio.currentTime);
+    duration.textContent = timeLabel(audio.duration);
+    if (valid) seek.value = String(Math.round(audio.currentTime / audio.duration * 1000));
+    else seek.value = '0';
+  }
+  function render(message) {
+    const playing = mode === 'playing' && !audio.paused;
+    playPause.disabled = selected < 0;
+    stop.disabled = mode === 'off' && audio.paused;
     playPause.textContent = playing ? 'Ⅱ Pause' : '▶ Play';
     toggle.classList.toggle('is-playing', playing);
+    panel.classList.toggle('is-audio-playing', playing);
+    badge.textContent = { off:'SOUND OFF', loading:'LOADING', playing:'PLAYING · REPEAT ONE', paused:'PAUSED', error:'UNAVAILABLE' }[mode];
+    if (selected >= 0) currentTrack.textContent = MUSIC_TRACKS[selected].title;
     rows.forEach((row, i) => {
       row.setAttribute('aria-pressed', String(i === selected));
       row.querySelector('.track-mark').textContent = i === selected && playing ? '♫' : '▷';
     });
+    if (message) status.textContent = message;
+    else if (mode === 'off') status.textContent = 'Music is off. Choose a track or press Play.';
+    else if (mode === 'loading') status.textContent = 'Loading your soundtrack…';
+    else if (mode === 'playing') status.textContent = 'Music keeps playing when you close this panel.';
+    else if (mode === 'paused') status.textContent = 'Paused. Press Play to continue.';
+    if (panel.hidden) toggle.setAttribute('aria-label', playing ? 'Open music player; music is playing' : 'Open music player');
   }
-  async function selectTrack(index) {
-    selected = index;
-    showPanel();
-    link.href = 'https://www.youtube.com/watch?v=' + MUSIC_TRACKS[index].id;
-    pending = true;
-    status.textContent = 'Loading: ' + MUSIC_TRACKS[index].title;
-    updateButtons();
+  async function startPlayback() {
+    const token = ++request;
+    mode = 'loading'; render();
     try {
-      await loadAPI();
-      if (!pending) return;
-      if (player?.loadVideoById) {
-        active = true; pending = false;
-        player.loadVideoById(MUSIC_TRACKS[selected].id);
-        updateButtons();
-      } else if (!player) {
-        player = new YT.Player('youtube-player', {
-          width: '100%', height: '200',
-          videoId: MUSIC_TRACKS[selected].id,
-          playerVars: { playsinline: 1, controls: 1, rel: 0, origin: location.protocol.startsWith('http') ? location.origin : undefined },
-          events: {
-            onReady(e) {
-              e.target.getIframe().setAttribute('title', 'YouTube music video player');
-              e.target.setVolume(Number(volume.value));
-              if (pending) {
-                active = true; pending = false;
-                e.target.loadVideoById(MUSIC_TRACKS[selected].id);
-                status.textContent = 'If playback does not start, press Play.';
-              }
-              updateButtons();
-            },
-            onStateChange(e) {
-              const state = e.data;
-              playing = state === YT.PlayerState.PLAYING;
-              if (state === YT.PlayerState.PLAYING) {
-                active = true;
-                status.textContent = 'Playing: ' + MUSIC_TRACKS[selected].title;
-              } else if (state === YT.PlayerState.PAUSED) {
-                status.textContent = 'Paused: ' + MUSIC_TRACKS[selected].title;
-              } else if (state === YT.PlayerState.ENDED && active) {
-                player.seekTo(0, true);
-                player.playVideo();
-              } else if (state === YT.PlayerState.CUED || state === YT.PlayerState.UNSTARTED) {
-                if (active) status.textContent = 'Ready: ' + MUSIC_TRACKS[selected].title + ' — press Play.';
-              }
-              updateButtons();
-            },
-            onError(e) {
-              active = false; playing = false; pending = false;
-              status.textContent = [101,150].includes(e.data)
-                ? 'This video does not allow website playback. Use YouTube ↗ or choose another song.'
-                : 'This video could not play here (code ' + e.data + '). Try YouTube ↗ or another song.';
-              panel.classList.remove('compact');
-              updateButtons();
-            }
-          }
-        });
-      }
-    } catch (e) {
-      pending = false; active = false; playing = false;
-      status.textContent = e.message;
-      updateButtons();
+      await audio.play();
+      if (token !== request) return;
+      mode = 'playing'; render();
+    } catch (error) {
+      if (token !== request || error.name === 'AbortError') return;
+      mode = 'error';
+      render(error.name === 'NotAllowedError'
+        ? 'Your browser blocked playback. Press Play to start.'
+        : 'This audio could not load. Check that the MP3 files were uploaded next to index.html.');
     }
   }
-  rows.forEach((row, i) => row.addEventListener('click', () => selectTrack(i)));
+  rows.forEach((row, i) => row.addEventListener('click', () => {
+    if (selected !== i || !audio.getAttribute('src')) {
+      ++request; mode = 'loading'; audio.pause();
+      selected = i;
+      audio.src = MUSIC_TRACKS[i].src;
+      audio.load(); updateTime();
+    }
+    startPlayback();
+    panel.scrollTop = 0;
+  }));
   playPause.addEventListener('click', () => {
-    if (!player?.playVideo) return;
-    if (playing) player.pauseVideo();
-    else { active = true; player.playVideo(); }
+    if (selected < 0) return;
+    if (!audio.paused && mode !== 'loading') {
+      ++request; mode = 'paused'; audio.pause(); render();
+    } else startPlayback();
   });
   stop.addEventListener('click', () => {
-    pending = false; active = false; playing = false;
-    player?.stopVideo?.();
-    status.textContent = 'Music is off. Press Play or choose a song to start again.';
-    updateButtons();
+    ++request; mode = 'off'; audio.pause();
+    try { audio.currentTime = 0; } catch (_) { /* Metadata may not be ready. */ }
+    render('Music is off. Press Play or choose a track to start again.');
+    updateTime();
   });
+  audio.addEventListener('playing', () => {
+    if (mode === 'off') { audio.pause(); return; }
+    mode = 'playing'; render();
+  });
+  audio.addEventListener('pause', () => {
+    if (mode === 'playing') { mode = 'paused'; render(); }
+  });
+  audio.addEventListener('error', () => {
+    if (mode === 'off') return;
+    mode = 'error'; render('This audio could not load. Check that all six MP3 files were uploaded next to index.html.');
+  });
+  audio.addEventListener('timeupdate', updateTime);
+  audio.addEventListener('loadedmetadata', updateTime);
+  audio.addEventListener('durationchange', updateTime);
   volume.addEventListener('input', () => {
+    audio.volume = Number(volume.value) / 100;
     document.getElementById('volume-value').textContent = volume.value + '%';
-    player?.setVolume?.(Number(volume.value));
   });
+  seek.addEventListener('input', () => {
+    if (Number.isFinite(audio.duration) && audio.duration > 0) {
+      audio.currentTime = Number(seek.value) / 1000 * audio.duration;
+      updateTime();
+    }
+  });
+  render();
 })();
