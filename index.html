@@ -14,13 +14,13 @@
     <div class="logo">BBEP ARAFAT</div>
 
     <nav>
-      <a href="#home">Home</a>
-      <a href="#about">About</a>
+      <a href="#home" data-view="home" aria-current="page">Home</a>
+      <a href="#about" data-view="about">About</a>
     </nav>
   </header>
 
   <main>
-    <section class="hero" id="home">
+    <section class="hero view-screen" id="home" aria-labelledby="home-title">
       <div class="storm-scene" aria-hidden="true">
     <div class="cloud cloud-one"></div><div class="cloud cloud-two"></div>
     <div class="storm-grain"></div>
@@ -29,7 +29,7 @@
   </div>
   <div class="tag">WELCOME TO MY WORLD</div>
 
-      <h1 class="hero-title">BBEP <span>ARAFAT</span></h1>
+      <h1 class="hero-title" id="home-title" tabindex="-1">BBEP <span>ARAFAT</span></h1>
   <div class="hero-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
 
@@ -37,12 +37,16 @@
   
     </section>
 
-  <section class="about" id="about">
-  <div class="about-card">
-    <h2>About Me</h2>
+  <section class="about view-screen" id="about" aria-labelledby="about-title" hidden>
+  <div class="about-shell">
+    <div class="about-topbar"><span class="screen-label">PROFILE / 01</span><a class="back-home" href="#home" data-view="home"><span aria-hidden="true">←</span> Back to Home</a></div>
+    <div class="about-card">
+      <div class="profile-label">FUNK / PHONK PRODUCER</div>
+      <h2 id="about-title" tabindex="-1">About Me</h2>
     <p>
       My name is ARAFAT IBNEY ARIF, and I live in Cumilla. I'm a professional funk and phonk music producer, creating original tracks in Bangla, English, and Brazilian Portuguese. I hope you enjoy my music!
     </p>
+    </div>
   </div>
 </section>
   </main>

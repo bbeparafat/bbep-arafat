@@ -1,38 +1,44 @@
-
+/* Same-tab screen navigation. The audio player stays mounted outside both views. */
 (() => {
-  const section = document.querySelector("#about");
-  const card = section?.querySelector(".about-card");
+  const views = { home: document.getElementById('home'), about: document.getElementById('about') };
+  const headings = { home: document.getElementById('home-title'), about: document.getElementById('about-title') };
+  let current = null;
 
-  if (!section || !card) return;
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-  let previousY = window.scrollY;
-  let direction = "down";
-
-  window.addEventListener("scroll", () => {
-    const currentY = window.scrollY;
-    if (currentY !== previousY) {
-      direction = currentY > previousY ? "down" : "up";
+  function applyView(focus = true) {
+    const requested = location.hash.slice(1);
+    const next = requested === 'about' ? 'about' : 'home';
+    const changed = next !== current;
+    Object.entries(views).forEach(([name, view]) => {
+      view.hidden = name !== next;
+      view.classList.remove('view-enter');
+    });
+    current = next;
+    document.body.dataset.view = next;
+    document.querySelectorAll('nav [data-view]').forEach(link => {
+      if (link.dataset.view === next) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
+    document.title = next === 'about' ? 'About Me | BBEP Arafat' : 'BBEP Arafat | Official Website';
+    if (changed) {
+      void views[next].offsetWidth;
+      views[next].classList.add('view-enter');
+      window.scrollTo({ top: 0, behavior: 'instant' });
     }
-    previousY = currentY;
-  }, { passive: true });
-
-  const observer = new IntersectionObserver(([entry]) => {
-    if (entry.isIntersecting) {
-      card.classList.remove("is-away");
-      return;
-    }
-
-    const goingDown = direction === "down";
-    card.style.setProperty("--fly-x", goingDown ? "120px" : "-120px");
-    card.style.setProperty("--fly-y", goingDown ? "-100px" : "100px");
-    card.style.setProperty("--fly-turn", goingDown ? "10deg" : "-10deg");
-    card.classList.add("is-away");
-  }, { threshold: 0.18 });
-
-  observer.observe(section);
+    if (focus && changed) headings[next].focus({ preventScroll: true });
+  }
+  document.querySelectorAll('[data-view]').forEach(link => {
+    link.addEventListener('click', event => {
+      if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      const hash = '#' + link.dataset.view;
+      if (location.hash !== hash) history.pushState(null, '', hash);
+      applyView();
+    });
+  });
+  window.addEventListener('popstate', () => applyView());
+  window.addEventListener('hashchange', () => applyView());
+  applyView(false);
 })();
-
 
 (() => {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;

@@ -517,3 +517,41 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 /* Keep player labels readable on small screens. */
 .panel-kicker, .list-heading, .track-number, .audio-kicker, #playback-badge, .repeat-label, .time-row { font-size: 14px; }
 .panel-kicker, .audio-kicker, #playback-badge { letter-spacing: .7px; }
+
+/* HOME / ABOUT — game-lobby style views in one document, not stacked sections. */
+body { min-height: 100svh; display: flex; flex-direction: column; }
+header, footer { flex: none; }
+main { flex: 1; display: flex; flex-direction: column; }
+.view-screen:not([hidden]) { flex: 1; min-height: calc(100svh - 147px); }
+nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 2px; border-bottom: 2px solid transparent; }
+nav a[aria-current="page"] { color: #c4b5fd; border-bottom-color: #a78bfa; }
+header { padding-top: 17px; padding-bottom: 17px; }
+.about:not([hidden]) { display: flex; justify-content: center; align-items: center; padding: 48px 24px 64px; }
+.about-shell { width: min(100%, 760px); position: relative; z-index: 1; }
+.about-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 32px; }
+.screen-label { color: #c4b5fd; font-size: 14px; letter-spacing: 2px; }
+.back-home { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 10px 16px; color: #eee7ff; border: 1px solid #8d72ac; border-radius: 8px; text-decoration: none; background: #181123; font-size: 14px; transition: background .2s, border-color .2s; }
+.back-home:hover { background: #2b1f3d; border-color: #c4b5fd; }
+.about .about-card { max-width: none; padding: 48px 36px; background: rgba(12,10,25,.84); }
+.profile-label { margin-bottom: 24px; color: #c5acdF; font-size: 14px; letter-spacing: 2px; }
+.about h2 { font-size: clamp(34px, 5vw, 48px); margin-bottom: 24px; }
+.about p { font-size: 18px; line-height: 1.85; }
+#home-title:focus, #about-title:focus { outline: none; }
+.view-enter { animation: view-arrive .5s ease-out both; }
+@keyframes view-arrive { from { opacity: 0; translate: 0 10px; } to { opacity: 1; translate: 0 0; } }
+@media (max-width: 500px) {
+  header { padding: 12px 20px; }
+  .view-screen:not([hidden]) { min-height: calc(100svh - 136px); }
+  .about:not([hidden]) { padding: 28px 20px 48px; }
+  .about-topbar { gap: 12px; margin-bottom: 28px; }
+  .screen-label { letter-spacing: 1px; font-size: 14px; }
+  .back-home { padding: 10px 12px; }
+  .about .about-card { padding: 32px 24px; }
+  .profile-label { font-size: 14px; letter-spacing: 1px; line-height: 1.6; }
+  .about p { font-size: 16px; line-height: 1.85; }
+}
+@media (prefers-reduced-motion: reduce) { .view-enter { animation: none !important; } }
+@media (max-width: 500px) {
+  footer { padding: 16px 90px 16px 20px; line-height: 1.5; }
+  .view-screen:not([hidden]) { min-height: calc(100svh - 143px); }
+}
