@@ -1,16 +1,16 @@
-/* Same-tab screen navigation. The audio player stays mounted outside both views. */
+/* Same-tab screen navigation. The audio player stays mounted outside all views. */
 (() => {
-  const views = { home: document.getElementById('home'), about: document.getElementById('about') };
-  const headings = { home: document.getElementById('home-title'), about: document.getElementById('about-title') };
+  const views = Object.fromEntries(['home', 'contact', 'order', 'about'].map(name => [name, document.getElementById(name)]));
+  const headings = Object.fromEntries(Object.keys(views).map(name => [name, document.getElementById(name + '-title')]));
   let current = null;
 
   function applyView(focus = true) {
     const requested = location.hash.slice(1);
-    const next = requested === 'about' ? 'about' : 'home';
+    const next = Object.hasOwn(views, requested) ? requested : 'home';
     const changed = next !== current;
     Object.entries(views).forEach(([name, view]) => {
       view.hidden = name !== next;
-      view.classList.remove('view-enter');
+      if (changed || name !== next) view.classList.remove('view-enter', 'contact-enter');
     });
     current = next;
     document.body.dataset.view = next;
@@ -18,10 +18,12 @@
       if (link.dataset.view === next) link.setAttribute('aria-current', 'page');
       else link.removeAttribute('aria-current');
     });
-    document.title = next === 'about' ? 'About Me | BBEP Arafat' : 'BBEP Arafat | Official Website';
+    const titles = { home: 'BBEP Arafat | Official Website', contact: 'Contact Info | BBEP Arafat', order: 'Order Your Own Music | BBEP Arafat', about: 'About Me | BBEP Arafat' };
+    document.title = titles[next];
     if (changed) {
       void views[next].offsetWidth;
       views[next].classList.add('view-enter');
+      if (next === 'contact') views[next].classList.add('contact-enter');
       window.scrollTo({ top: 0, behavior: 'instant' });
     }
     if (focus && changed) headings[next].focus({ preventScroll: true });
@@ -183,6 +185,7 @@ const MUSIC_TRACKS = [{"title": "Golden Brown X Love Story (slowed) Remix", "src
     playPause.textContent = playing ? 'Ⅱ Pause' : '▶ Play';
     toggle.classList.toggle('is-playing', playing);
     panel.classList.toggle('is-audio-playing', playing);
+    document.body.classList.toggle('music-on', playing);
     badge.textContent = { off:'SOUND OFF', loading:'LOADING', playing:'PLAYING · REPEAT ONE', paused:'PAUSED', error:'UNAVAILABLE' }[mode];
     if (selected >= 0) currentTrack.textContent = MUSIC_TRACKS[selected].title;
     rows.forEach((row, i) => {
