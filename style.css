@@ -642,3 +642,86 @@ header { padding-top: 17px; padding-bottom: 17px; }
 
 /* Use the reference image's luminance as a mask: every electrical line is purple. */
 .electric-image { background-image: none; background-color: #c084fc; mask-image: var(--electric-art); mask-mode: luminance; mask-size: cover; mask-position: center; mask-repeat: no-repeat; filter: drop-shadow(0 0 10px #a855f7); }
+
+/* Single-page request form and browser-local Cart. */
+.order,.cart { padding: 48px 24px 72px; background: radial-gradient(ellipse at 50% 10%,#24173366,transparent 62%),#080810; }
+.request-shell { width: min(100%,940px); margin: 0 auto; }
+.request-intro { margin-bottom: 28px; }
+.request-intro h2 { font-size: clamp(30px,4vw,42px); line-height: 1.2; letter-spacing: -1px; }
+.request-intro p { color: #c6bbd2; line-height: 1.6; margin-top: 12px; font-size: 16px; }
+.request-card { border: 1px solid #806294; border-radius: 16px; padding: 32px; background: #130e1ce8; }
+.form-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; }
+.field { display: flex; flex-direction: column; gap: 8px; color: #eee4f8; font-size: 16px; line-height: 1.5; }
+.required { color: #d5afff; }
+.field input,.field textarea,.field select { width: 100%; min-width: 0; min-height: 48px; border: 1px solid #8d75aa; border-radius: 8px; background: #090710; color: #f1eaff; padding: 12px 14px; font: inherit; }
+.field textarea { resize: vertical; min-height: 100px; }
+.field input::placeholder,.field textarea::placeholder { color: #b2a6c1; }
+.field input[type=date] { color-scheme: dark; }
+.field small,.field-note { font-size: 14px; line-height: 1.65; color: #c6b9d3; }
+.field.full { grid-column: 1/-1; }
+.field input:focus-visible,.field textarea:focus-visible,.field select:focus-visible { outline: 2px solid #ddc5ff; outline-offset: 2px; }
+.genre-group,.lyrics-group { border: 0; padding: 0; margin-top: 32px; min-width: 0; }
+.genre-group legend,.lyrics-group legend { font-size: 18px; font-weight: bold; color: #ede0fc; margin-bottom: 16px; }
+.genre-options { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
+.genre-options label { position: relative; }
+.genre-options input { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); }
+.genre-options span { display: flex; align-items: center; justify-content: center; min-height: 52px; padding: 10px; border: 1px solid #9172a8; border-radius: 8px; color: #ded0ea; background: #1e142b; font-size: 16px; }
+.genre-options input:checked+span { background: #a779df33; border-color: #d9b6ff; color: #f4e8ff; box-shadow: inset 0 0 0 1px #d9b6ff; }
+.genre-options input:focus-visible+span { outline: 2px solid #e8d6ff; outline-offset: 3px; }
+.conditional { margin-top: 28px; }
+.lyrics-options { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.lyrics-options label { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 10px 14px; border: 1px solid #8a6f9f; border-radius: 8px; color: #e4d7ef; font-size: 15px; }
+.lyrics-options input { accent-color: #be95f2; width: 18px; height: 18px; }
+.form-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 32px; }
+.action-main,.action-secondary { min-height: 48px; padding: 12px 20px; border-radius: 8px; font-size: 16px; font-weight: bold; border: 1px solid #c8a6f2; }
+.action-main { background: #b698e5; color: #12091f; }
+.action-main:hover:not(:disabled) { background: #d1b4f7; }
+.action-secondary { background: #271b35; color: #eadcf5; border-color: #9075a5; }
+.action-main:disabled { opacity: .55; cursor: not-allowed; }
+.text-link { color: #dec3ff; font-size: 16px; min-height: 44px; display: inline-flex; align-items: center; }
+#form-message { margin-top: 18px; }
+#cart-count { font-size: 22px; margin-left: 10px; color: #bd9be5; }
+.cart-empty { text-align: center; padding: 48px 24px; }
+.cart-empty h3 { font-size: 24px; margin-bottom: 12px; }
+.cart-empty p { color: #c4b4d0; margin-bottom: 20px; }
+.cart-item { margin-bottom: 20px; }
+.cart-item-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.cart-item-header h3 { font-size: 22px; line-height: 1.4; }
+.cart-item-header p { margin-top: 8px; color: #c0abd4; font-size: 14px; }
+.cart-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.cart-buttons button { min-height: 44px; padding: 8px 14px; font-size: 14px; border: 1px solid #9576ac; border-radius: 8px; background: #25182f; color: #ead9f8; }
+.cart-item details { margin-top: 20px; }
+.cart-item summary { min-height: 44px; padding: 10px 0; color: #d7b9f2; font-size: 16px; cursor: pointer; }
+.cart-item dl { display: grid; grid-template-columns: 150px minmax(0,1fr); gap: 12px 16px; margin-top: 12px; font-size: 14px; line-height: 1.65; }
+.cart-item dt { color: #bca8ce; }
+.cart-item dd { margin: 0; color: #f0e4fa; overflow-wrap: anywhere; white-space: pre-wrap; }
+.cart-checkout { margin-top: 28px; }
+.cart-checkout .action-main { margin-top: 18px; }
+.email-setup-notice { border: 1px solid #a58562; border-radius: 8px; padding: 12px 14px; background: #332617; color: #f1d6ad; font-size: 14px; line-height: 1.65; margin-top: 16px; }
+#checkout-message { margin-top: 14px; }
+#order-receipt h3 { font-size: 24px; margin-bottom: 12px; }
+.cart-privacy { margin-top: 24px; }
+#order-captcha { margin-top: 18px; }
+#cart-title:focus,#order-title:focus { outline: none; }
+@media (max-width:650px) {
+ nav { grid-template-columns: minmax(44px,.7fr) minmax(50px,1fr) minmax(44px,.7fr) minmax(80px,1.6fr) minmax(44px,.8fr); gap: 4px; }
+ .order,.cart { padding: 28px 20px 48px; }
+ .request-card { padding: 24px 20px; }
+ .form-grid { grid-template-columns: minmax(0,1fr); gap: 20px; }
+ .genre-options { grid-template-columns: repeat(2,minmax(0,1fr)); }
+ .cart-item-header { flex-direction: column; }
+ .cart-item dl { grid-template-columns: minmax(0,1fr); gap: 4px; }
+ .cart-item dd { margin-bottom: 10px; }
+ .form-actions .action-main { width: 100%; }
+ .request-intro h2 { font-size: 30px; }
+}
+@media (max-width:340px) { header { padding-left:16px;padding-right:16px; } .order,.cart { padding-left:16px;padding-right:16px; } .request-card { padding:20px 16px; } }
+/* Reserve a safe rail for the always-visible music control on form/cart views. */
+@media (max-width:650px) {
+ .order,.cart { padding-left:16px; padding-right:88px; }
+ .request-shell .about-topbar { align-items:flex-start; gap:12px; }
+ .request-shell .screen-label { min-width:0; line-height:1.6; }
+ .request-shell .back-home { flex:none; }
+ .lyrics-options label { max-width:100%; }
+ .lyrics-options label span { min-width:0; overflow-wrap:anywhere; }
+}

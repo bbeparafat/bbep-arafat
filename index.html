@@ -16,6 +16,7 @@
     <nav>
       <a href="#home" data-view="home" aria-current="page">Home</a>
       <a href="#contact" data-view="contact">Contact Info</a>
+      <a href="#cart" data-view="cart">Cart</a>
       <a href="#order" data-view="order">Order Your Own Music</a>
       <a href="#about" data-view="about">About</a>
     </nav>
@@ -50,7 +51,56 @@
     </div>
   </div>
 </section>
-<section class="order view-screen" id="order" aria-labelledby="order-title" hidden><h2 class="sr-only" id="order-title" tabindex="-1">Order Your Own Music</h2></section>
+
+<section class="order view-screen" id="order" aria-labelledby="order-title" hidden>
+ <div class="request-shell">
+  <div class="about-topbar"><span class="screen-label">CUSTOM MUSIC / 03</span><a class="back-home" href="#cart" data-view="cart">View Cart →</a></div>
+  <div class="request-intro"><h2 id="order-title" tabindex="-1">Order Your Own Music</h2><p>All your music details, in one form.</p></div>
+  <form id="music-order-form" class="request-card">
+   <div class="form-grid">
+    <label class="field"><span class="field-label">Your name <span class="required">*</span></span><input name="customerName" autocomplete="name" maxlength="80" required placeholder="Your name"></label>
+    <label class="field"><span class="field-label">Email <span class="required">*</span></span><input name="customerEmail" type="email" autocomplete="email" maxlength="150" required placeholder="you@example.com"><small>Your order copy will be sent here once email is connected.</small></label>
+    <label class="field"><span class="field-label">Telegram username <span class="required">*</span></span><input name="telegram" autocomplete="off" maxlength="33" pattern="@?[A-Za-z0-9_]{5,32}" required placeholder="@your_username"><small>The creator will contact you on Telegram.</small></label>
+    <label class="field"><span class="field-label">Music style <span class="required">*</span></span><input name="musicStyle" maxlength="200" required placeholder="e.g. dark, aggressive, melodic"></label>
+    <label class="field"><span class="field-label">Duration </span><input name="duration" maxlength="80" placeholder="e.g. 1 minute"></label>
+    <label class="field"><span class="field-label">Preferred deadline </span><input name="deadline" type="date"><small>Optional; timing will be discussed with the creator.</small></label>
+    <label class="field full"><span class="field-label">Reference link </span><input name="reference" type="url" maxlength="2048" placeholder="https://…"><small>Optional: a track that shows your preferred sound.</small></label>
+    <label class="field full"><span class="field-label">More details </span><textarea name="brief" maxlength="1500" rows="3" placeholder="Tell me about the sound you want…"></textarea></label>
+   </div>
+   <fieldset class="genre-group"><legend>Music type <span class="required">*</span></legend><div class="genre-options">
+    <label><input type="radio" name="genre" value="Phonk" required><span>Phonk</span></label>
+    <label><input type="radio" name="genre" value="Funk"><span>Funk</span></label>
+    <label><input type="radio" name="genre" value="Only Sound"><span>Only Sound</span></label>
+    <label><input type="radio" name="genre" value="Other"><span>Other</span></label>
+   </div></fieldset>
+   <label class="field conditional" id="song-type-field" hidden><span class="field-label">Song format <span class="required">*</span></span><select name="songType" disabled><option value="">Choose a format</option><option>Only Rap</option><option>Normal Song</option><option>Song + Rap</option></select><small>This choice appears only for Other, not Funk.</small></label>
+   <fieldset class="lyrics-group conditional" id="lyrics-fields" hidden><legend>Lyrics</legend>
+    <div class="lyrics-options"><label><input type="radio" name="lyricsMode" value="own" checked><span>I have lyrics</span></label><label><input type="radio" name="lyricsMode" value="creator"><span>Lyrics by BBEP ARAFAT</span></label></div>
+    <label class="field" id="own-lyrics-field"><span class="field-label">Your lyrics <span id="lyrics-required" class="required" hidden>*</span></span><textarea name="lyrics" maxlength="8000" rows="5" disabled placeholder="Paste your lyrics here…"></textarea><small id="lyrics-hint">Lyrics are optional for this type.</small></label>
+    <p class="field-note" id="creator-lyrics-note" hidden>Custom lyrics requested from BBEP ARAFAT. Details and pricing can be discussed directly.</p>
+   </fieldset>
+   <div class="form-actions"><button type="submit" class="action-main" id="add-to-cart">Add to Cart →</button><button type="button" class="action-secondary" id="cancel-edit" hidden>Cancel edit</button><a class="text-link" href="#cart" data-view="cart">Open Cart</a></div>
+   <p id="form-message" class="field-note" role="status" aria-live="polite">Adding to Cart saves a draft on this browser; it does not submit an order.</p>
+  </form>
+ </div>
+</section>
+<section class="cart view-screen" id="cart" aria-labelledby="cart-title" hidden>
+ <div class="request-shell">
+  <div class="about-topbar"><span class="screen-label">YOUR REQUESTS / 04</span><a class="back-home" href="#order" data-view="order">+ Add music request</a></div>
+  <div class="request-intro"><h2 id="cart-title" tabindex="-1">Your Cart <span id="cart-count">0</span></h2><p>Review every detail before sending your order request.</p></div>
+  <div id="cart-items"></div>
+  <div class="cart-checkout request-card" id="cart-checkout" hidden>
+   <p class="field-note">The full request will be emailed to you and <strong>bbep.arafat@gmail.com</strong>. Your Telegram username is included. Confirmation sends these details through the connected email service.</p>
+   <p class="email-setup-notice" id="email-setup-notice">Automatic email is not connected yet. Order confirmation is unavailable until setup is complete.</p>
+   <div id="order-captcha"></div>
+   <button type="button" id="confirm-order" class="action-main" disabled>Confirm Order</button>
+   <p id="checkout-message" class="field-note" role="status" aria-live="polite"></p>
+  </div>
+  <div id="order-receipt" class="request-card" hidden><h3>Order request submitted</h3><p id="receipt-message" class="field-note"></p><p class="field-note">Check your inbox and spam folder. Final details can be discussed on Telegram.</p></div>
+  <p class="cart-privacy field-note">Drafts are stored on this browser only. Remove them from Cart to clear saved details.</p>
+ </div>
+</section>
+
 
   <section class="about view-screen" id="about" aria-labelledby="about-title" hidden>
   <div class="about-shell">

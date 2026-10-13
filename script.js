@@ -1,6 +1,6 @@
 /* Same-tab screen navigation. The audio player stays mounted outside all views. */
 (() => {
-  const views = Object.fromEntries(['home', 'contact', 'order', 'about'].map(name => [name, document.getElementById(name)]));
+  const views = Object.fromEntries(['home', 'contact', 'cart', 'order', 'about'].map(name => [name, document.getElementById(name)]));
   const headings = Object.fromEntries(Object.keys(views).map(name => [name, document.getElementById(name + '-title')]));
   let current = null;
 
@@ -18,7 +18,7 @@
       if (link.dataset.view === next) link.setAttribute('aria-current', 'page');
       else link.removeAttribute('aria-current');
     });
-    const titles = { home: 'BBEP Arafat | Official Website', contact: 'Contact Info | BBEP Arafat', order: 'Order Your Own Music | BBEP Arafat', about: 'About Me | BBEP Arafat' };
+    const titles = { home: 'BBEP Arafat | Official Website', contact: 'Contact Info | BBEP Arafat', cart: 'Cart | BBEP Arafat', order: 'Order Your Own Music | BBEP Arafat', about: 'About Me | BBEP Arafat' };
     document.title = titles[next];
     if (changed) {
       void views[next].offsetWidth;
@@ -27,6 +27,7 @@
       window.scrollTo({ top: 0, behavior: 'instant' });
     }
     if (focus && changed) headings[next].focus({ preventScroll: true });
+    document.dispatchEvent(new CustomEvent('bbep:view-change', { detail: next }));
   }
   document.querySelectorAll('[data-view]').forEach(link => {
     link.addEventListener('click', event => {
@@ -261,4 +262,247 @@ const MUSIC_TRACKS = [{"title": "Golden Brown X Love Story (slowed) Remix", "src
     }
   });
   render();
+})();
+
+/* EMAIL SETUP: public identifiers only. Never put a Gmail password, SMTP secret
+   or private API key here. See the setup guide before enabling confirmation. */
+const ORDER_EMAIL_CONFIG = {
+  publicKey: '',
+  serviceId: '',
+  ownerTemplateId: '',
+  captchaSiteKey: '',
+  customerCopyLinked: false,
+  // The owner template's To address must be fixed to bbep.arafat@gmail.com.
+  // Link a customer-copy template in its Auto-Reply settings; enable reCAPTCHA.
+  ...(window.BBEP_ORDER_EMAIL || {})
+};
+
+(() => {
+  const form = document.getElementById('music-order-form');
+  const genreInputs = [...form.querySelectorAll('[name="genre"]')];
+  const modeInputs = [...form.querySelectorAll('[name="lyricsMode"]')];
+  const typeField = document.getElementById('song-type-field');
+  const typeInput = form.elements.songType;
+  const lyricsFields = document.getElementById('lyrics-fields');
+  const ownLyricsField = document.getElementById('own-lyrics-field');
+  const lyricsInput = form.elements.lyrics;
+  const formMessage = document.getElementById('form-message');
+  const cartItems = document.getElementById('cart-items');
+  const checkout = document.getElementById('cart-checkout');
+  const confirmButton = document.getElementById('confirm-order');
+  const checkoutMessage = document.getElementById('checkout-message');
+  const emailNotice = document.getElementById('email-setup-notice');
+  const receipt = document.getElementById('order-receipt');
+  const storageKey = 'bbep_music_cart_v1';
+  let cart = [], editing = null, busy = false, captchaToken = '', captchaWidget = null;
+  let captchaPromise, emailPromise;
+  const trim = value => String(value ?? '').trim();
+  const id = () => window.crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+  const genre = () => form.elements.genre.value;
+  const lyricsMode = () => form.elements.lyricsMode.value || 'own';
+  const configured = () => !!(ORDER_EMAIL_CONFIG.publicKey && ORDER_EMAIL_CONFIG.serviceId && ORDER_EMAIL_CONFIG.ownerTemplateId && ORDER_EMAIL_CONFIG.captchaSiteKey && ORDER_EMAIL_CONFIG.customerCopyLinked === true);
+  const telegramValid = value => /^@?[A-Za-z0-9_]{5,32}$/.test(trim(value));
+  const emailValid = value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trim(value));
+  function valid(item) {
+    return item && typeof item.id === 'string' && trim(item.customerName) && emailValid(item.customerEmail) && telegramValid(item.telegram) && trim(item.musicStyle)
+      && ['Phonk','Funk','Only Sound','Other'].includes(item.genre)
+      && (item.genre !== 'Other' || ['Only Rap','Normal Song','Song + Rap'].includes(item.songType))
+      && (item.genre === 'Only Sound' || ['own','creator'].includes(item.lyricsMode))
+      && (item.genre !== 'Phonk' || item.lyricsMode === 'creator' || trim(item.lyrics));
+  }
+  try {
+    const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    if (Array.isArray(saved)) cart = saved.filter(valid);
+  } catch (_) { cart = []; }
+  function persist() {
+    try {
+      if (cart.length) localStorage.setItem(storageKey, JSON.stringify(cart));
+      else localStorage.removeItem(storageKey);
+    } catch (_) {
+      formMessage.textContent = 'Draft is available in this tab, but browser storage is unavailable. It may be lost on refresh.';
+    }
+  }
+  function syncFields() {
+    const selectedGenre = genre();
+    const usesLyrics = !!selectedGenre && selectedGenre !== 'Only Sound';
+    const own = lyricsMode() === 'own';
+    typeField.hidden = selectedGenre !== 'Other';
+    typeInput.disabled = selectedGenre !== 'Other';
+    typeInput.required = selectedGenre === 'Other';
+    lyricsFields.hidden = !usesLyrics;
+    modeInputs.forEach(input => input.disabled = !usesLyrics);
+    ownLyricsField.hidden = !usesLyrics || !own;
+    lyricsInput.disabled = !usesLyrics || !own;
+    lyricsInput.required = selectedGenre === 'Phonk' && own;
+    document.getElementById('lyrics-required').hidden = !lyricsInput.required;
+    document.getElementById('lyrics-hint').textContent = lyricsInput.required
+      ? 'Phonk requires lyrics. Paste them here or choose Lyrics by BBEP ARAFAT.'
+      : 'Lyrics are optional for this music type.';
+    document.getElementById('creator-lyrics-note').hidden = !usesLyrics || own;
+    lyricsInput.setCustomValidity('');
+  }
+  genreInputs.concat(modeInputs).forEach(input => input.addEventListener('change', syncFields));
+  form.addEventListener('input', event => event.target.setCustomValidity?.(''));
+  function collect() {
+    const g = genre();
+    const handle = trim(form.elements.telegram.value);
+    return {
+      id: editing || id(), customerName: trim(form.elements.customerName.value),
+      customerEmail: trim(form.elements.customerEmail.value).toLowerCase(), telegram: '@' + handle.replace(/^@/, ''),
+      musicStyle: trim(form.elements.musicStyle.value), duration: trim(form.elements.duration.value),
+      deadline: trim(form.elements.deadline.value), reference: trim(form.elements.reference.value), brief: trim(form.elements.brief.value),
+      genre: g, songType: g === 'Other' ? typeInput.value : '',
+      lyricsMode: g === 'Only Sound' ? 'n/a' : lyricsMode(),
+      lyrics: g !== 'Only Sound' && lyricsMode() === 'own' ? trim(lyricsInput.value) : ''
+    };
+  }
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    if (busy) return;
+    for (const field of ['customerName','customerEmail','telegram','musicStyle']) {
+      const input = form.elements[field];
+      input.setCustomValidity(trim(input.value) ? '' : 'Please complete this required field.');
+    }
+    if (lyricsInput.required) lyricsInput.setCustomValidity(trim(lyricsInput.value) ? '' : 'Add lyrics or choose Lyrics by BBEP ARAFAT.');
+    if (!form.reportValidity()) return;
+    const item = collect();
+    if (!valid(item)) { formMessage.textContent = 'Please check your required details.'; return; }
+    if (cart.some(existing => existing.id !== editing && (trim(existing.customerEmail).toLowerCase() !== item.customerEmail || trim(existing.telegram).toLowerCase() !== item.telegram.toLowerCase()))) {
+      formMessage.textContent = 'Use the same email and Telegram username for requests in one cart, or submit/remove the existing drafts first.';
+      return;
+    }
+    const index = cart.findIndex(existing => existing.id === editing);
+    if (index >= 0) cart[index] = item; else cart.push(item);
+    formMessage.textContent = index >= 0 ? 'Cart draft updated. Nothing has been emailed yet.' : 'Added to Cart. Nothing has been emailed yet.';
+    editing = null; document.getElementById('add-to-cart').textContent = 'Add to Cart →';
+    document.getElementById('cancel-edit').hidden = true;
+    receipt.hidden = true;
+    persist(); renderCart();
+  });
+  document.getElementById('cancel-edit').addEventListener('click', () => {
+    editing = null; form.reset(); syncFields();
+    document.getElementById('add-to-cart').textContent = 'Add to Cart →';
+    document.getElementById('cancel-edit').hidden = true;
+    formMessage.textContent = 'Editing cancelled; the saved draft was not changed.';
+  });
+  function node(tag, text, className) {
+    const el = document.createElement(tag);
+    if (text !== undefined) el.textContent = text;
+    if (className) el.className = className;
+    return el;
+  }
+  function detailPairs(item) {
+    const pairs = [['Name',item.customerName],['Email',item.customerEmail],['Telegram',item.telegram],['Music type',item.genre],['Music style',item.musicStyle]];
+    if (item.songType) pairs.push(['Song format',item.songType]);
+    pairs.push(['Duration',item.duration || 'Not specified'],['Deadline',item.deadline || 'To discuss'],['Reference',item.reference || 'None'],['Details',item.brief || 'None']);
+    if (item.genre !== 'Only Sound') {
+      pairs.push(['Lyrics',item.lyricsMode === 'creator' ? 'Lyrics by BBEP ARAFAT' : item.lyrics || 'No lyrics supplied']);
+    }
+    return pairs;
+  }
+  function editItem(item) {
+    if (busy) return;
+    editing = item.id;
+    for (const field of ['customerName','customerEmail','telegram','musicStyle','duration','deadline','reference','brief','songType','lyrics']) form.elements[field].value = item[field] || '';
+    form.elements.genre.value = item.genre;
+    form.elements.lyricsMode.value = item.lyricsMode === 'creator' ? 'creator' : 'own';
+    syncFields();
+    document.getElementById('add-to-cart').textContent = 'Update Cart →';
+    document.getElementById('cancel-edit').hidden = false;
+    formMessage.textContent = 'Editing saved draft. Update Cart when finished.';
+    location.hash = 'order';
+  }
+  function renderCart() {
+    cartItems.replaceChildren();
+    document.getElementById('cart-count').textContent = String(cart.length);
+    checkout.hidden = cart.length === 0;
+    if (!cart.length && receipt.hidden) {
+      const empty = node('div',undefined,'request-card cart-empty');
+      empty.append(node('h3','Your cart is empty'),node('p','Add your music details to create an order draft.'));
+      const link = node('a','Create a music request →','text-link'); link.href = '#order'; empty.append(link); cartItems.append(empty);
+    }
+    cart.forEach((item,i) => {
+      const card = node('article',undefined,'request-card cart-item');
+      const header = node('div',undefined,'cart-item-header');
+      const title = node('div');
+      title.append(node('h3',`${String(i+1).padStart(2,'0')} / ${item.genre}${item.songType ? ' · ' + item.songType : ''}`),node('p',`Draft ${item.id.slice(0,8).toUpperCase()} — not submitted`));
+      const buttons = node('div',undefined,'cart-buttons');
+      const edit = node('button','Edit'); edit.type='button';edit.disabled=busy;edit.addEventListener('click',()=>editItem(item));
+      const remove = node('button','Remove');remove.type='button';remove.disabled=busy;remove.addEventListener('click',()=>{cart=cart.filter(existing=>existing.id!==item.id);persist();renderCart();});
+      buttons.append(edit,remove);header.append(title,buttons);card.append(header);
+      const details = node('details');details.append(node('summary','Review all details'));
+      const list = node('dl'); detailPairs(item).forEach(([label,value])=>list.append(node('dt',label),node('dd',value)));details.append(list);card.append(details);cartItems.append(card);
+    });
+    renderControls();
+    if (document.body.dataset.view === 'cart') ensureCaptcha();
+  }
+  function renderControls() {
+    emailNotice.hidden = configured();
+    confirmButton.disabled = busy || !cart.length || !configured() || !captchaToken;
+    confirmButton.textContent = busy ? 'Submitting…' : 'Confirm Order';
+    document.getElementById('add-to-cart').disabled = busy;
+  }
+  async function ensureCaptcha() {
+    if (!configured() || !cart.length || captchaWidget !== null) return;
+    if (captchaPromise) return captchaPromise;
+    const render = () => {
+      if (captchaWidget !== null) return;
+      captchaWidget = window.grecaptcha.render('order-captcha',{
+        sitekey: ORDER_EMAIL_CONFIG.captchaSiteKey, size:'compact', theme:'dark',
+        callback: token=>{captchaToken=token;renderControls();},
+        'expired-callback':()=>{captchaToken='';renderControls();},
+        'error-callback':()=>{captchaToken='';checkoutMessage.textContent='Verification could not load. Check your connection and try again.';renderControls();}
+      });
+      checkoutMessage.textContent = 'Complete verification, then confirm your order request.';
+    };
+    if (window.grecaptcha?.render) { render(); return; }
+    captchaPromise = new Promise((resolve,reject)=>{
+      const timer=setTimeout(()=>reject(new Error('Verification timed out. Refresh and try again.')),20000);
+      window.__bbepCaptchaLoaded=()=>{clearTimeout(timer);try{render();resolve();}catch(error){reject(error);}};
+      const script=document.createElement('script');script.src='https://www.google.com/recaptcha/api.js?onload=__bbepCaptchaLoaded&render=explicit';script.async=true;script.defer=true;
+      script.onerror=()=>{clearTimeout(timer);reject(new Error('Verification could not load.'));};document.head.append(script);
+    }).catch(error=>{checkoutMessage.textContent=error.message;captchaPromise=null;});
+    return captchaPromise;
+  }
+  function loadEmailSDK() {
+    if (window.emailjs?.send) return Promise.resolve();
+    if (emailPromise) return emailPromise;
+    emailPromise = new Promise((resolve,reject)=>{
+      const timer=setTimeout(()=>reject(new Error('Mail service timed out. Your drafts are still saved.')),20000);
+      const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/@emailjs/browser@5/dist/email.min.js';
+      script.onload=()=>{clearTimeout(timer);window.emailjs?.send ? resolve() : reject(new Error('Mail service did not load.'));};
+      script.onerror=()=>{clearTimeout(timer);reject(new Error('Mail service could not load. Your drafts are still saved.'));};document.head.append(script);
+    }).catch(error=>{emailPromise=null;throw error;});
+    return emailPromise;
+  }
+  confirmButton.addEventListener('click',async()=>{
+    if (busy || !configured() || !cart.length || !captchaToken) return;
+    if (!cart.every(valid)) { checkoutMessage.textContent='Some drafts need correction. Edit them before submitting.';return; }
+    const first=cart[0];
+    if (cart.some(item=>trim(item.customerEmail).toLowerCase()!==trim(first.customerEmail).toLowerCase() || trim(item.telegram).toLowerCase()!==trim(first.telegram).toLowerCase())) {
+      checkoutMessage.textContent='Use one email and Telegram username for all requests in this cart.';return;
+    }
+    busy=true;renderCart();
+    checkoutMessage.textContent='Submitting your order request…';
+    const ref='BBEP-'+id().slice(0,8).toUpperCase();
+    const details=cart.map((item,i)=>`REQUEST ${i+1} / ${item.id.slice(0,8).toUpperCase()}\n`+detailPairs(item).map(([label,value])=>`${label}: ${value}`).join('\n')).join('\n\n--------------------\n\n');
+    const params={order_ref:ref,customer_name:first.customerName,customer_email:first.customerEmail,telegram:first.telegram,order_details:details,'g-recaptcha-response':captchaToken};
+    try {
+      await loadEmailSDK();
+      await window.emailjs.send(ORDER_EMAIL_CONFIG.serviceId,ORDER_EMAIL_CONFIG.ownerTemplateId,params,{publicKey:ORDER_EMAIL_CONFIG.publicKey});
+      cart=[];persist();receipt.hidden=false;
+      document.getElementById('receipt-message').textContent=`The mail service accepted request ${ref}. The configured templates send the full details to ${first.customerEmail} and bbep.arafat@gmail.com. Inbox delivery still depends on the email provider.`;
+      editing=null;form.reset();syncFields();document.getElementById('add-to-cart').textContent='Add to Cart →';document.getElementById('cancel-edit').hidden=true;
+      formMessage.textContent='Previous request submitted. You can create a new draft.';
+      checkoutMessage.textContent='';
+    } catch(error) {
+      checkoutMessage.textContent='Could not confirm the request. Your drafts are retained. Check the mail-service setup/connection before retrying.';
+    } finally {
+      busy=false;captchaToken='';
+      if(captchaWidget!==null)window.grecaptcha?.reset?.(captchaWidget);
+      renderCart();
+    }
+  });
+  document.addEventListener('bbep:view-change',event=>{if(event.detail==='cart'){renderCart();ensureCaptcha();}});
+  syncFields();renderCart();
 })();
