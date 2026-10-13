@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080810">
+  <meta name="description" content="BBEP Arafat — funk and phonk music producer. Explore my world and listen to my selected soundtrack.">
+  <title>BBEP Arafat | Official Website</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="auth.css">
+  <script src="auth.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="logo">BBEP ARAFAT</div>
+
+    <nav>
+      <a href="#home" data-view="home" aria-current="page">Home</a>
+      <a href="#contact" data-view="contact">Contact Info</a>
+      <a href="#cart" data-view="cart">Cart</a>
+      <a href="#order" data-view="order">Order Your Own Music</a>
+      <a href="#about" data-view="about">About</a>
+      <a href="#login" data-view="login" id="account-link">Login / Sign up</a>
+      <a href="#admin-login" data-view="admin-login" id="admin-entry">Admin Login</a>
+      <button type="button" id="logout" hidden>Log out</button>
+    </nav>
+  </header>
+
+  <main>
+<!--PROTECTED_VIEWS-->
+<section class="auth-view view-screen" id="admin-login" aria-labelledby="admin-login-title" hidden>
+ <div class="auth-card"><span class="auth-eyebrow">STUDIO OWNER ACCESS</span><h2 id="admin-login-title" tabindex="-1">Admin Login.</h2><p class="auth-sub">Only the owner's approved, verified email can enter this panel.</p>
+ <form id="admin-login-form"><label>Admin email<input type="email" name="email" autocomplete="username" required maxlength="150" placeholder="Your approved email"></label><label>Website password<span class="password-wrap"><input type="password" name="password" autocomplete="current-password" required maxlength="128"><button type="button" class="show-password" aria-label="Show password">Show</button></span></label><button class="auth-primary" type="submit">Open Admin Panel →</button></form>
+ <p class="auth-status" id="admin-login-status" role="status" aria-live="polite"></p><p class="auth-foot">Customer account? <a href="#login" data-view="login">Regular login</a></p><a href="#home" data-view="home" class="auth-back">← Back to Home</a>
+ </div>
+</section>
+
+<section class="auth-view view-screen" id="login" aria-labelledby="login-title" hidden>
+ <div class="auth-card"><span class="auth-eyebrow">YOUR STUDIO ACCOUNT</span><h2 id="login-title" tabindex="-1">Welcome back.</h2><p class="auth-sub">Log in to order music and access your cart.</p>
+ <form id="login-form"><label>Email<input type="email" name="email" autocomplete="username" required maxlength="150" placeholder="you@example.com"></label><label>Password<span class="password-wrap"><input type="password" name="password" autocomplete="current-password" required maxlength="128"><button type="button" class="show-password" aria-label="Show password">Show</button></span></label><button class="auth-primary" type="submit">Log in →</button></form>
+ <p class="auth-status" id="login-status" role="status" aria-live="polite"></p><p class="auth-foot"><a href="#admin-login" data-view="admin-login">Admin Login →</a></p>
+ <p class="auth-foot">New here? <a href="#signup" data-view="signup">Create an account</a></p><a href="#home" data-view="home" class="auth-back">← Back to Home</a>
+ </div>
+</section>
+<section class="auth-view view-screen" id="signup" aria-labelledby="signup-title" hidden>
+ <div class="auth-card"><span class="auth-eyebrow">START YOUR MUSIC JOURNEY</span><h2 id="signup-title" tabindex="-1">Create your account.</h2><p class="auth-sub" id="signup-intro">Your email. Your sound. One verified account.</p>
+ <form id="signup-form"><label>Email<input type="email" name="email" autocomplete="email" required maxlength="150" placeholder="you@example.com"></label><label>Password<span class="password-wrap"><input type="password" name="password" autocomplete="new-password" required minlength="12" maxlength="128" aria-describedby="password-hint"><button type="button" class="show-password" aria-label="Show password">Show</button></span><small id="password-hint">Use 12–128 characters. This is your website password, not your Gmail password.</small></label><label>Confirm password<span class="password-wrap"><input type="password" name="confirmPassword" autocomplete="new-password" required minlength="12" maxlength="128"><button type="button" class="show-password" aria-label="Show confirm password">Show</button></span></label><label>Username<input type="text" name="username" autocomplete="nickname" required minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" placeholder="Your studio name"><small>3–24 letters, numbers or underscores. Must be unique.</small></label><button class="auth-primary" type="submit">Send verification code →</button></form>
+ <div id="google-choice"><div class="auth-divider"><span>OR</span></div><button type="button" id="google-signup" class="auth-google"><span aria-hidden="true" class="google-mark">G</span> Continue with Google</button><p class="auth-google-note">Then choose a username and website password, and verify your email with a code.</p></div>
+ <p class="auth-status" id="signup-status" role="status" aria-live="polite"></p><p class="auth-foot"><a href="#admin-login" data-view="admin-login">Admin Login →</a></p>
+ <p class="auth-foot">Already have an account? <a href="#login" data-view="login">Log in</a></p><a href="#home" data-view="home" class="auth-back">← Back to Home</a>
+ </div>
+</section>
+<section class="auth-view view-screen" id="verify" aria-labelledby="verify-title" hidden>
+ <div class="auth-card"><span class="auth-eyebrow">ONE LAST STEP</span><h2 id="verify-title" tabindex="-1">Check your inbox.</h2><p class="auth-sub">Enter the 6-digit code sent to <strong id="otp-email">your email</strong>. Check your spam folder too.</p><form id="verify-form"><label>Verification code<input class="otp-input" type="text" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" minlength="6" required placeholder="000000" aria-describedby="otp-timer"></label><p class="otp-time" id="otp-timer" role="timer">Code expires in 02:00</p><button class="auth-primary" type="submit">Verify &amp; continue →</button></form><button type="button" id="resend-otp" class="auth-secondary">Resend code</button><p class="auth-status" id="verify-status" role="status" aria-live="polite"></p><p class="auth-foot"><a href="#signup" data-view="signup" id="restart-signup">Start again / change email</a></p><a href="#home" data-view="home" class="auth-back">← Back to Home</a></div>
+</section>
+<section class="auth-view view-screen" id="gate" aria-labelledby="gate-title" hidden>
+ <div class="auth-card auth-gate"><span class="auth-lock" aria-hidden="true">↗</span><span class="auth-eyebrow">MEMBERS ONLY</span><h2 id="gate-title" tabindex="-1">Your next step starts here.</h2><p class="auth-sub">Please log in or sign up first to access <strong id="gate-destination">this page</strong>. Home and About are always open.</p><div class="auth-gate-actions"><a class="auth-primary" href="#login" data-view="login">Log in →</a><a class="auth-secondary" href="#signup" data-view="signup">Sign up</a></div><a href="#home" data-view="home" class="auth-back">← Back to Home</a></div>
+</section>
+
+    <section class="hero view-screen" id="home" aria-labelledby="home-title">
+      <div class="storm-scene" aria-hidden="true">
+    <div class="cloud cloud-one"></div><div class="cloud cloud-two"></div>
+    <div class="storm-grain"></div>
+    <svg class="lightning lightning-left" viewBox="0 0 170 400"><path d="M115 0 73 98 105 93 48 213 83 202 25 365"/><path class="branch" d="m48 213 68 49-8 51"/></svg>
+    <svg class="lightning lightning-right" viewBox="0 0 170 400"><path d="M115 0 73 98 105 93 48 213 83 202 25 365"/><path class="branch" d="m48 213 68 49-8 51"/></svg>
+  </div>
+  <div class="tag">WELCOME TO MY WORLD</div>
+
+      <h1 class="hero-title" id="home-title" tabindex="-1">BBEP <span>ARAFAT</span></h1>
+  <div class="hero-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+
+
+  
+    </section>
+
+
+
+
+
+
+
+
+  <section class="about view-screen" id="about" aria-labelledby="about-title" hidden>
+  <div class="about-shell">
+    <div class="about-topbar"><span class="screen-label">PROFILE / 01</span><a class="back-home" href="#home" data-view="home"><span aria-hidden="true">←</span> Back to Home</a></div>
+    <div class="about-card">
+      <div class="profile-label">FUNK / PHONK PRODUCER</div>
+      <h2 id="about-title" tabindex="-1">About Me</h2>
+    <p>
+      My name is ARAFAT IBNEY ARIF, and I live in Cumilla. I'm a professional funk and phonk music producer, creating original tracks in Bangla, English, and Brazilian Portuguese. I hope you enjoy my music!
+    </p>
+    </div>
+  </div>
+</section>
+  </main>
+
+  <footer>
+    © 2026 BBEP Arafat. All rights reserved.
+  </footer>
+
+
+  <button type="button" class="music-toggle" id="music-toggle" aria-label="Open music player" aria-controls="music-panel" aria-expanded="false">
+    <svg class="button-bolt" viewBox="0 0 64 64" aria-hidden="true"><path d="M45 2 32 15 43 17 27 30 M62 37 48 43 51 51 38 62"/></svg>
+    <span class="music-symbol" aria-hidden="true">♫</span>
+    <span class="toggle-waves" aria-hidden="true"><i></i><i></i><i></i></span>
+  </button>
+  <aside class="music-panel" id="music-panel" aria-label="Music player" hidden>
+    <div class="music-heading"><div><span class="panel-kicker">BBEP ARAFAT / MUSIC</span><h2>Your soundtrack.</h2></div><button type="button" id="close-music" class="icon-button" aria-label="Close music panel; music keeps playing">×</button></div>
+    <p class="music-status" id="music-status" role="status" aria-live="polite">Choose a track to start. Sound is off.</p>
+    <div class="audio-card">
+      <div class="audio-art" aria-hidden="true"><span>♫</span><div class="audio-bars"><i></i><i></i><i></i><i></i><i></i></div></div>
+      <div class="audio-description"><span class="audio-kicker">NOW SELECTED</span><p id="current-track">Choose your soundtrack</p><span id="playback-badge">SOUND OFF</span></div>
+    </div>
+    <audio id="music-audio" preload="none" loop></audio>
+    <div class="seek-row"><label class="sr-only" for="seek">Seek within current song</label><input type="range" id="seek" min="0" max="1000" value="0" disabled><div class="time-row"><span id="elapsed">0:00</span><span id="duration">0:00</span></div></div>
+    <div class="playback-controls"><button type="button" id="play-pause" disabled>▶ Play</button><button type="button" id="stop-music" disabled>■ Off</button><span class="repeat-label">REPEAT ONE ↻</span></div>
+    <label class="volume-label" for="volume">Volume <input type="range" id="volume" min="0" max="100" value="55"><output id="volume-value" for="volume">55%</output></label>
+    <div class="track-list-area"><div class="list-heading"><span>6 TRACKS · SCROLL</span><span>YOUR SELECTION</span></div><ol class="track-list"><li><button type="button" class="track" data-index="0" aria-pressed="false"><span class="track-number">01</span><span class="track-name">Golden Brown X Love Story (slowed) Remix</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
+<li><button type="button" class="track" data-index="1" aria-pressed="false"><span class="track-number">02</span><span class="track-name">Golden Brown (Piano)</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
+<li><button type="button" class="track" data-index="2" aria-pressed="false"><span class="track-number">03</span><span class="track-name">🟣 MONTAGEM GRAVE | BRAZILIAN PHONK</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
+<li><button type="button" class="track" data-index="3" aria-pressed="false"><span class="track-number">04</span><span class="track-name">MINHA AURA Phonk</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
+<li><button type="button" class="track" data-index="4" aria-pressed="false"><span class="track-number">05</span><span class="track-name">Montagem Taca O Grave (BBEP Arafat)</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
+<li><button type="button" class="track" data-index="5" aria-pressed="false"><span class="track-number">06</span><span class="track-name">Olha na Minha Cara (Normal)</span><span class="track-mark" aria-hidden="true">▷</span></button></li></ol></div>
+    <p class="repeat-note">× closes this panel, not the music. Use Off to stop.</p>
+  </aside>
+
+</body>
+</html>

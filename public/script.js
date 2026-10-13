@@ -1,0 +1,426 @@
+/* Auth-aware screen navigation is managed by auth.js. */
+
+(() => {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!window.matchMedia(
+    "(hover: hover) and (pointer: fine)"
+  ).matches) return;
+
+  function initCosmicOrb() {
+    if (document.getElementById("cosmic-orb")) return;
+
+    const orb = document.createElement("div");
+    orb.id = "cosmic-orb";
+    orb.innerHTML = `
+      <span class="arc"></span>
+      <span class="arc arc-two"></span>
+      <span class="core"></span>
+    `;
+    document.body.appendChild(orb);
+    document.documentElement.classList.add("orb-ready");
+
+    let targetX = -100, targetY = -100;
+    let currentX = targetX, currentY = targetY;
+    let lastParticle = 0;
+
+    document.addEventListener("mousemove", (e) => {
+      targetX = e.clientX;
+      targetY = e.clientY;
+      orb.classList.add("visible");
+
+      const now = performance.now();
+      if (now - lastParticle < 35) return;
+      lastParticle = now;
+
+      const particle = document.createElement("span");
+      particle.className = "cosmic-particle";
+      particle.style.left = targetX + "px";
+      particle.style.top = targetY + "px";
+      particle.style.setProperty(
+        "--drift-x",
+        (Math.random() * 36 - 18) + "px"
+      );
+      particle.style.setProperty(
+        "--drift-y",
+        (Math.random() * 36 - 18) + "px"
+      );
+
+      document.body.appendChild(particle);
+      setTimeout(() => particle.remove(), 750);
+    });
+
+    document.addEventListener("mouseout", (e) => {
+      if (!e.relatedTarget) orb.classList.remove("visible");
+    });
+
+    document.addEventListener("mouseover", (e) => {
+      if (e.target.closest(
+        "a, button, input, textarea, select, [role='button']"
+      )) {
+        orb.classList.add("hovering");
+      } else {
+        orb.classList.remove("hovering");
+      }
+    });
+
+    function animate() {
+      currentX += (targetX - currentX) * 0.22;
+      currentY += (targetY - currentY) * 0.22;
+      orb.style.left = currentX + "px";
+      orb.style.top = currentY + "px";
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded", initCosmicOrb, { once: true }
+    );
+  } else {
+    initCosmicOrb();
+  }
+})();
+
+
+const MUSIC_TRACKS = [{"title": "Golden Brown X Love Story (slowed) Remix", "src": "track-01.mp3"}, {"title": "Golden Brown (Piano)", "src": "track-02.mp3"}, {"title": "🟣 MONTAGEM GRAVE | BRAZILIAN PHONK", "src": "track-03.mp3"}, {"title": "MINHA AURA Phonk", "src": "track-04.mp3"}, {"title": "Montagem Taca O Grave (BBEP Arafat)", "src": "track-05.mp3"}, {"title": "Olha na Minha Cara (Normal)", "src": "track-06.mp3"}];
+
+(() => {
+  const audio = document.getElementById('music-audio');
+  const panel = document.getElementById('music-panel');
+  const toggle = document.getElementById('music-toggle');
+  const close = document.getElementById('close-music');
+  const status = document.getElementById('music-status');
+  const playPause = document.getElementById('play-pause');
+  const stop = document.getElementById('stop-music');
+  const volume = document.getElementById('volume');
+  const seek = document.getElementById('seek');
+  const elapsed = document.getElementById('elapsed');
+  const duration = document.getElementById('duration');
+  const currentTrack = document.getElementById('current-track');
+  const badge = document.getElementById('playback-badge');
+  const rows = [...document.querySelectorAll('.track')];
+  let selected = -1, mode = 'off', request = 0;
+  audio.volume = Number(volume.value) / 100;
+  audio.loop = true;
+
+  function showPanel() {
+    panel.hidden = false;
+    panel.scrollTop = 0;
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.setAttribute('aria-label', 'Close music panel; music keeps playing');
+  }
+  function hidePanel() {
+    // Only the panel is hidden. Do not pause, unload or destroy the audio.
+    panel.hidden = true;
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', audio.paused ? 'Open music player' : 'Open music player; music is playing');
+    toggle.focus();
+  }
+  toggle.addEventListener('click', () => panel.hidden ? showPanel() : hidePanel());
+  close.addEventListener('click', hidePanel);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !panel.hidden) hidePanel();
+  });
+
+  function timeLabel(seconds) {
+    if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+    return Math.floor(seconds / 60) + ':' + String(Math.floor(seconds % 60)).padStart(2, '0');
+  }
+  function updateTime() {
+    const valid = Number.isFinite(audio.duration) && audio.duration > 0;
+    seek.disabled = !valid;
+    elapsed.textContent = timeLabel(audio.currentTime);
+    duration.textContent = timeLabel(audio.duration);
+    if (valid) seek.value = String(Math.round(audio.currentTime / audio.duration * 1000));
+    else seek.value = '0';
+  }
+  function render(message) {
+    const playing = mode === 'playing' && !audio.paused;
+    playPause.disabled = selected < 0;
+    stop.disabled = mode === 'off' && audio.paused;
+    playPause.textContent = playing ? 'Ⅱ Pause' : '▶ Play';
+    toggle.classList.toggle('is-playing', playing);
+    panel.classList.toggle('is-audio-playing', playing);
+    document.body.classList.toggle('music-on', playing);
+    badge.textContent = { off:'SOUND OFF', loading:'LOADING', playing:'PLAYING · REPEAT ONE', paused:'PAUSED', error:'UNAVAILABLE' }[mode];
+    if (selected >= 0) currentTrack.textContent = MUSIC_TRACKS[selected].title;
+    rows.forEach((row, i) => {
+      row.setAttribute('aria-pressed', String(i === selected));
+      row.querySelector('.track-mark').textContent = i === selected && playing ? '♫' : '▷';
+    });
+    if (message) status.textContent = message;
+    else if (mode === 'off') status.textContent = 'Music is off. Choose a track or press Play.';
+    else if (mode === 'loading') status.textContent = 'Loading your soundtrack…';
+    else if (mode === 'playing') status.textContent = 'Music keeps playing when you close this panel.';
+    else if (mode === 'paused') status.textContent = 'Paused. Press Play to continue.';
+    if (panel.hidden) toggle.setAttribute('aria-label', playing ? 'Open music player; music is playing' : 'Open music player');
+  }
+  async function startPlayback() {
+    const token = ++request;
+    mode = 'loading'; render();
+    try {
+      await audio.play();
+      if (token !== request) return;
+      mode = 'playing'; render();
+    } catch (error) {
+      if (token !== request || error.name === 'AbortError') return;
+      mode = 'error';
+      render(error.name === 'NotAllowedError'
+        ? 'Your browser blocked playback. Press Play to start.'
+        : 'This audio could not load. Check that the MP3 files were uploaded next to index.html.');
+    }
+  }
+  rows.forEach((row, i) => row.addEventListener('click', () => {
+    if (selected !== i || !audio.getAttribute('src')) {
+      ++request; mode = 'loading'; audio.pause();
+      selected = i;
+      audio.src = MUSIC_TRACKS[i].src;
+      audio.load(); updateTime();
+    }
+    startPlayback();
+    panel.scrollTop = 0;
+  }));
+  playPause.addEventListener('click', () => {
+    if (selected < 0) return;
+    if (!audio.paused && mode !== 'loading') {
+      ++request; mode = 'paused'; audio.pause(); render();
+    } else startPlayback();
+  });
+  stop.addEventListener('click', () => {
+    ++request; mode = 'off'; audio.pause();
+    try { audio.currentTime = 0; } catch (_) { /* Metadata may not be ready. */ }
+    render('Music is off. Press Play or choose a track to start again.');
+    updateTime();
+  });
+  audio.addEventListener('playing', () => {
+    if (mode === 'off') { audio.pause(); return; }
+    mode = 'playing'; render();
+  });
+  audio.addEventListener('pause', () => {
+    if (mode === 'playing') { mode = 'paused'; render(); }
+  });
+  audio.addEventListener('error', () => {
+    if (mode === 'off') return;
+    mode = 'error'; render('This audio could not load. Check that all six MP3 files were uploaded next to index.html.');
+  });
+  audio.addEventListener('timeupdate', updateTime);
+  audio.addEventListener('loadedmetadata', updateTime);
+  audio.addEventListener('durationchange', updateTime);
+  volume.addEventListener('input', () => {
+    audio.volume = Number(volume.value) / 100;
+    document.getElementById('volume-value').textContent = volume.value + '%';
+  });
+  seek.addEventListener('input', () => {
+    if (Number.isFinite(audio.duration) && audio.duration > 0) {
+      audio.currentTime = Number(seek.value) / 1000 * audio.duration;
+      updateTime();
+    }
+  });
+  render();
+})();
+
+/* EMAIL SETUP: public identifiers only. Never put a Gmail password, SMTP secret
+   or private API key here. See the setup guide before enabling confirmation. */
+
+(() => {
+  const form = document.getElementById('music-order-form');
+  if (!form) return;
+  const genreInputs = [...form.querySelectorAll('[name="genre"]')];
+  const modeInputs = [...form.querySelectorAll('[name="lyricsMode"]')];
+  const typeField = document.getElementById('song-type-field');
+  const typeInput = form.elements.songType;
+  const lyricsFields = document.getElementById('lyrics-fields');
+  const ownLyricsField = document.getElementById('own-lyrics-field');
+  const lyricsInput = form.elements.lyrics;
+  const formMessage = document.getElementById('form-message');
+  const cartItems = document.getElementById('cart-items');
+  const checkout = document.getElementById('cart-checkout');
+  const confirmButton = document.getElementById('confirm-order');
+  const checkoutMessage = document.getElementById('checkout-message');
+  const emailNotice = document.getElementById('email-setup-notice');
+  const receipt = document.getElementById('order-receipt');
+  const storageKey = 'bbep_music_cart_' + (window.BBEP_USER?.uid || 'unavailable');
+  let cart = [], editing = null, busy = false, captchaToken = '', captchaWidget = null;
+  let captchaPromise, emailPromise;
+  function lockEmail() { form.elements.customerEmail.value = window.BBEP_USER?.email || ''; form.elements.customerEmail.readOnly = true; }
+  lockEmail();
+  document.addEventListener('bbep:auth-ready', () => { lockEmail(); renderCart(); });
+  const trim = value => String(value ?? '').trim();
+  const id = () => window.crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+  const genre = () => form.elements.genre.value;
+  const lyricsMode = () => form.elements.lyricsMode.value || 'own';
+  const configured = () => window.BBEP_AUTH?.orderReady === true;
+  const telegramValid = value => /^@?[A-Za-z0-9_]{5,32}$/.test(trim(value));
+  const emailValid = value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trim(value));
+  function valid(item) {
+    return item && typeof item.id === 'string' && trim(item.customerName) && emailValid(item.customerEmail) && telegramValid(item.telegram) && trim(item.musicStyle)
+      && ['Phonk','Funk','Only Sound','Other'].includes(item.genre)
+      && (item.genre !== 'Other' || ['Only Rap','Normal Song','Song + Rap'].includes(item.songType))
+      && (item.genre === 'Only Sound' || ['own','creator'].includes(item.lyricsMode))
+      && (item.genre !== 'Phonk' || item.lyricsMode === 'creator' || trim(item.lyrics));
+  }
+  try {
+    const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    if (Array.isArray(saved)) cart = saved.filter(valid);
+  } catch (_) { cart = []; }
+  function persist() {
+    try {
+      if (cart.length) localStorage.setItem(storageKey, JSON.stringify(cart));
+      else localStorage.removeItem(storageKey);
+    } catch (_) {
+      formMessage.textContent = 'Draft is available in this tab, but browser storage is unavailable. It may be lost on refresh.';
+    }
+  }
+  function syncFields() {
+    const selectedGenre = genre();
+    const usesLyrics = !!selectedGenre && selectedGenre !== 'Only Sound';
+    const own = lyricsMode() === 'own';
+    typeField.hidden = selectedGenre !== 'Other';
+    typeInput.disabled = selectedGenre !== 'Other';
+    typeInput.required = selectedGenre === 'Other';
+    lyricsFields.hidden = !usesLyrics;
+    modeInputs.forEach(input => input.disabled = !usesLyrics);
+    ownLyricsField.hidden = !usesLyrics || !own;
+    lyricsInput.disabled = !usesLyrics || !own;
+    lyricsInput.required = selectedGenre === 'Phonk' && own;
+    document.getElementById('lyrics-required').hidden = !lyricsInput.required;
+    document.getElementById('lyrics-hint').textContent = lyricsInput.required
+      ? 'Phonk requires lyrics. Paste them here or choose Lyrics by BBEP ARAFAT.'
+      : 'Lyrics are optional for this music type.';
+    document.getElementById('creator-lyrics-note').hidden = !usesLyrics || own;
+    lyricsInput.setCustomValidity('');
+  }
+  genreInputs.concat(modeInputs).forEach(input => input.addEventListener('change', syncFields));
+  form.addEventListener('input', event => event.target.setCustomValidity?.(''));
+  function collect() {
+    const g = genre();
+    const handle = trim(form.elements.telegram.value);
+    return {
+      id: editing || id(), customerName: trim(form.elements.customerName.value),
+      customerEmail: trim(form.elements.customerEmail.value).toLowerCase(), telegram: '@' + handle.replace(/^@/, ''),
+      musicStyle: trim(form.elements.musicStyle.value), duration: trim(form.elements.duration.value),
+      deadline: trim(form.elements.deadline.value), reference: trim(form.elements.reference.value), brief: trim(form.elements.brief.value),
+      genre: g, songType: g === 'Other' ? typeInput.value : '',
+      lyricsMode: g === 'Only Sound' ? 'n/a' : lyricsMode(),
+      lyrics: g !== 'Only Sound' && lyricsMode() === 'own' ? trim(lyricsInput.value) : ''
+    };
+  }
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    if (busy) return;
+    for (const field of ['customerName','customerEmail','telegram','musicStyle']) {
+      const input = form.elements[field];
+      input.setCustomValidity(trim(input.value) ? '' : 'Please complete this required field.');
+    }
+    if (lyricsInput.required) lyricsInput.setCustomValidity(trim(lyricsInput.value) ? '' : 'Add lyrics or choose Lyrics by BBEP ARAFAT.');
+    if (!form.reportValidity()) return;
+    const item = collect();
+    if (!valid(item)) { formMessage.textContent = 'Please check your required details.'; return; }
+    if (cart.some(existing => existing.id !== editing && (trim(existing.customerEmail).toLowerCase() !== item.customerEmail || trim(existing.telegram).toLowerCase() !== item.telegram.toLowerCase()))) {
+      formMessage.textContent = 'Use the same email and Telegram username for requests in one cart, or submit/remove the existing drafts first.';
+      return;
+    }
+    const index = cart.findIndex(existing => existing.id === editing);
+    if (index >= 0) cart[index] = item; else cart.push(item);
+    formMessage.textContent = index >= 0 ? 'Cart draft updated. Nothing has been emailed yet.' : 'Added to Cart. Nothing has been emailed yet.';
+    editing = null; document.getElementById('add-to-cart').textContent = 'Add to Cart →';
+    document.getElementById('cancel-edit').hidden = true;
+    receipt.hidden = true;
+    persist(); renderCart();
+  });
+  document.getElementById('cancel-edit').addEventListener('click', () => {
+    editing = null; form.reset(); lockEmail(); syncFields();
+    document.getElementById('add-to-cart').textContent = 'Add to Cart →';
+    document.getElementById('cancel-edit').hidden = true;
+    formMessage.textContent = 'Editing cancelled; the saved draft was not changed.';
+  });
+  function node(tag, text, className) {
+    const el = document.createElement(tag);
+    if (text !== undefined) el.textContent = text;
+    if (className) el.className = className;
+    return el;
+  }
+  function detailPairs(item) {
+    const pairs = [['Name',item.customerName],['Email',item.customerEmail],['Telegram',item.telegram],['Music type',item.genre],['Music style',item.musicStyle]];
+    if (item.songType) pairs.push(['Song format',item.songType]);
+    pairs.push(['Duration',item.duration || 'Not specified'],['Deadline',item.deadline || 'To discuss'],['Reference',item.reference || 'None'],['Details',item.brief || 'None']);
+    if (item.genre !== 'Only Sound') {
+      pairs.push(['Lyrics',item.lyricsMode === 'creator' ? 'Lyrics by BBEP ARAFAT' : item.lyrics || 'No lyrics supplied']);
+    }
+    return pairs;
+  }
+  function editItem(item) {
+    if (busy) return;
+    editing = item.id;
+    for (const field of ['customerName','customerEmail','telegram','musicStyle','duration','deadline','reference','brief','songType','lyrics']) form.elements[field].value = item[field] || '';
+    form.elements.genre.value = item.genre;
+    form.elements.lyricsMode.value = item.lyricsMode === 'creator' ? 'creator' : 'own';
+    syncFields();
+    document.getElementById('add-to-cart').textContent = 'Update Cart →';
+    document.getElementById('cancel-edit').hidden = false;
+    formMessage.textContent = 'Editing saved draft. Update Cart when finished.';
+    location.hash = 'order';
+  }
+  function renderCart() {
+    cartItems.replaceChildren();
+    document.getElementById('cart-count').textContent = String(cart.length);
+    checkout.hidden = cart.length === 0;
+    if (!cart.length && receipt.hidden) {
+      const empty = node('div',undefined,'request-card cart-empty');
+      empty.append(node('h3','Your cart is empty'),node('p','Add your music details to create an order draft.'));
+      const link = node('a','Create a music request →','text-link'); link.href = '#order'; empty.append(link); cartItems.append(empty);
+    }
+    cart.forEach((item,i) => {
+      const card = node('article',undefined,'request-card cart-item');
+      const header = node('div',undefined,'cart-item-header');
+      const title = node('div');
+      title.append(node('h3',`${String(i+1).padStart(2,'0')} / ${item.genre}${item.songType ? ' · ' + item.songType : ''}`),node('p',`Draft ${item.id.slice(0,8).toUpperCase()} — not submitted`));
+      const buttons = node('div',undefined,'cart-buttons');
+      const edit = node('button','Edit'); edit.type='button';edit.disabled=busy;edit.addEventListener('click',()=>editItem(item));
+      const remove = node('button','Remove');remove.type='button';remove.disabled=busy;remove.addEventListener('click',()=>{cart=cart.filter(existing=>existing.id!==item.id);persist();renderCart();});
+      buttons.append(edit,remove);header.append(title,buttons);card.append(header);
+      const details = node('details');details.append(node('summary','Review all details'));
+      const list = node('dl'); detailPairs(item).forEach(([label,value])=>list.append(node('dt',label),node('dd',value)));details.append(list);card.append(details);cartItems.append(card);
+    });
+    renderControls();
+    if (document.body.dataset.view === 'cart') ensureCaptcha();
+  }
+  function renderControls() {
+    emailNotice.hidden = configured();
+    confirmButton.disabled = busy || !cart.length || !configured();
+    confirmButton.textContent = busy ? 'Submitting…' : 'Confirm Order';
+    document.getElementById('add-to-cart').disabled = busy;
+  }
+  function ensureCaptcha() { /* Authentication and rate limits are enforced on the server. */ }
+  confirmButton.addEventListener('click',async()=>{
+    if (busy || !configured() || !cart.length) return;
+    if (!cart.every(valid)) { checkoutMessage.textContent='Some drafts need correction. Edit them before submitting.';return; }
+    const first=cart[0];
+    if (cart.some(item=>trim(item.customerEmail).toLowerCase()!==trim(first.customerEmail).toLowerCase() || trim(item.telegram).toLowerCase()!==trim(first.telegram).toLowerCase())) {
+      checkoutMessage.textContent='Use one email and Telegram username for all requests in this cart.';return;
+    }
+    busy=true;renderCart();
+    checkoutMessage.textContent='Submitting your order request…';
+    const ref='BBEP-'+id().slice(0,8).toUpperCase();
+    const details=cart.map((item,i)=>`REQUEST ${i+1} / ${item.id.slice(0,8).toUpperCase()}\n`+detailPairs(item).map(([label,value])=>`${label}: ${value}`).join('\n')).join('\n\n--------------------\n\n');
+    const params={order_ref:ref,customer_name:first.customerName,customer_email:first.customerEmail,telegram:first.telegram,order_details:details,'g-recaptcha-response':captchaToken};
+    try {
+      const result = await window.BBEP_AUTH.request('/api/orders', {items: cart, requestId: ref});
+      cart=[];persist();receipt.hidden=false;
+      document.getElementById('receipt-message').textContent=`The mail service accepted request ${result.reference} for the studio inbox. ${result.copySent ? "A copy was also accepted for your email." : "Your order was sent, but the customer copy could not be sent."} Inbox delivery depends on the email provider.`;
+      editing=null;form.reset();lockEmail();syncFields();document.getElementById('add-to-cart').textContent='Add to Cart →';document.getElementById('cancel-edit').hidden=true;
+      formMessage.textContent='Previous request submitted. You can create a new draft.';
+      checkoutMessage.textContent='';
+    } catch(error) {
+      checkoutMessage.textContent=error.message + ' Your drafts are retained.';
+    } finally {
+      busy=false;captchaToken='';
+      if(captchaWidget!==null)window.grecaptcha?.reset?.(captchaWidget);
+      renderCart();
+    }
+  });
+  document.addEventListener('bbep:view-change',event=>{if(event.detail==='cart'){renderCart();ensureCaptcha();}});
+  syncFields();renderCart();
+})();
