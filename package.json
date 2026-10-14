@@ -1,0 +1,1 @@
+{"name":"bbep-studio-auth","version":"1.0.0","private":true,"type":"module","engines":{"node":">=22"},"scripts":{"start":"node --env-file-if-exists=.env server/index.js","test":"node --test tests/*.test.js"},"dependencies":{"cookie-parser":"^1.4.7","express":"^5.1.0","firebase-admin":"^14.5.0","google-auth-library":"^10.3.0","helmet":"^8.1.0","nodemailer":"^10.1.0"}}
