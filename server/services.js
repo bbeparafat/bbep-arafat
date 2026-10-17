@@ -6,16 +6,33 @@ import {OAuth2Client} from 'google-auth-library';
 import nodemailer from 'nodemailer';
 import {OTP_TTL,RESEND_WAIT,MAX_ATTEMPTS,token,otp,hash,checkOtp,email,signupInput,error,validOrder} from './security.js';
 
+// HTTPS email delivery for hosts that block outbound SMTP ports.
+export function createBrevoTransport(env, fetcher=fetch){
+ return {async sendMail(message){
+  const payload={sender:{email:email(message.from),name:'BBEP Arafat'},to:[{email:email(message.to)}],subject:message.subject,textContent:message.text};
+  if(message.replyTo)payload.replyTo={email:email(message.replyTo)};
+  let response;
+  try{
+   response=await fetcher('https://api.brevo.com/v3/smtp/email',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json','api-key':env.BREVO_API_KEY},body:JSON.stringify(payload),signal:AbortSignal.timeout(15000)});
+  }catch{throw error('Email delivery could not be confirmed. Please wait before requesting another code.',503);}
+  // Never expose API keys, verification codes, or provider response bodies.
+  if(!response.ok)throw error('Email provider rejected delivery. Check the verified sender and email service configuration.',503);
+  return {accepted:[message.to]};
+ }};
+}
+
 export function createServices(env=process.env, dependencies={}){
  const origin=env.APP_ORIGIN || 'http://localhost:3000';
  const authReady=!!(env.FIREBASE_PROJECT_ID&&env.FIREBASE_CLIENT_EMAIL&&env.FIREBASE_PRIVATE_KEY&&env.FIREBASE_WEB_API_KEY&&env.OTP_HMAC_SECRET?.length>=32&&env.COOKIE_SECRET?.length>=32);
- const mailReady=!!(env.SMTP_HOST&&env.SMTP_USER&&env.SMTP_PASSWORD&&env.MAIL_FROM);
+ const brevoReady=!!(env.BREVO_API_KEY&&env.MAIL_FROM);
+ const smtpReady=!!(env.SMTP_HOST&&env.SMTP_USER&&env.SMTP_PASSWORD&&env.MAIL_FROM);
+ const mailReady=brevoReady||smtpReady;
  const ready=authReady&&mailReady;
  const googleReady=ready&&!!(env.GOOGLE_CLIENT_ID&&env.GOOGLE_CLIENT_SECRET);
  const orderReady=ready&&!!env.OWNER_EMAIL;
  const app=authReady&&!dependencies.auth?initializeApp({credential:cert({projectId:env.FIREBASE_PROJECT_ID,clientEmail:env.FIREBASE_CLIENT_EMAIL,privateKey:env.FIREBASE_PRIVATE_KEY.replace(/\\n/g,'\n')})}):null;
  const auth=dependencies.auth || (app?getAuth(app):null),db=dependencies.db || (app?getFirestore(app):null);
- const smtp=dependencies.smtp || (mailReady?nodemailer.createTransport({host:env.SMTP_HOST,port:Number(env.SMTP_PORT||587),secure:Number(env.SMTP_PORT)===465,requireTLS:Number(env.SMTP_PORT)!==465,auth:{user:env.SMTP_USER,pass:env.SMTP_PASSWORD},connectionTimeout:10000,socketTimeout:20000}):null);
+ const smtp=dependencies.smtp || (brevoReady?createBrevoTransport(env,dependencies.fetch||fetch):(smtpReady?nodemailer.createTransport({host:env.SMTP_HOST,port:Number(env.SMTP_PORT||587),secure:Number(env.SMTP_PORT)===465,requireTLS:Number(env.SMTP_PORT)!==465,auth:{user:env.SMTP_USER,pass:env.SMTP_PASSWORD},connectionTimeout:10000,socketTimeout:20000}):null));
  const google=dependencies.google || (googleReady?new OAuth2Client(env.GOOGLE_CLIENT_ID,env.GOOGLE_CLIENT_SECRET,origin+'/auth/google/callback'):null);
  const fetcher=dependencies.fetch || fetch;
  const requireReady=()=>{if(!ready)throw error('Authentication and email services are not connected yet.',503);};
