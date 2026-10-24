@@ -11,12 +11,12 @@
 </head>
 <body>
   <header>
-    <div class="logo">BBEP ARAFAT</div>
+    <a class="logo brand-link" href="#home" data-view="home" aria-label="BBEP Arafat home"><img class="brand-image" src="logo.png" alt=""><span>BBEP ARAFAT</span></a>
 
     <nav>
       <a href="#home" data-view="home" aria-current="page">Home</a>
       <a href="#contact" data-view="contact">Contact Info</a>
-      <a href="#cart" data-view="cart">Cart</a>
+      <a href="#music" data-view="music">My Music</a>
       <a href="#order" data-view="order">Order Your Own Music</a>
       <a href="#about" data-view="about">About</a>
     </nav>
@@ -114,21 +114,12 @@
     </div>
   </div>
 </section>
-  </main>
-
-  <footer>
-    © 2026 BBEP Arafat. All rights reserved.
-  </footer>
-
-
-  <button type="button" class="music-toggle" id="music-toggle" aria-label="Open music player" aria-controls="music-panel" aria-expanded="false">
-    <svg class="button-bolt" viewBox="0 0 64 64" aria-hidden="true"><path d="M45 2 32 15 43 17 27 30 M62 37 48 43 51 51 38 62"/></svg>
-    <span class="music-symbol" aria-hidden="true">♫</span>
-    <span class="toggle-waves" aria-hidden="true"><i></i><i></i><i></i></span>
-  </button>
-  <aside class="music-panel" id="music-panel" aria-label="Music player" hidden>
-    <div class="music-heading"><div><span class="panel-kicker">BBEP ARAFAT / MUSIC</span><h2>Your soundtrack.</h2></div><button type="button" id="close-music" class="icon-button" aria-label="Close music panel; music keeps playing">×</button></div>
-    <p class="music-status" id="music-status" role="status" aria-live="polite">Choose a track to start. Sound is off.</p>
+<section class="music-view view-screen" id="music" aria-labelledby="music-title" hidden>
+ <div class="music-page-wrap">
+  <div class="music-page-intro"><span class="music-eyebrow">BBEP ARAFAT / SELECTED SOUNDS</span><h2 id="music-title" tabindex="-1">My Music<span>.</span></h2><p>Four tracks. One world. Find your soundtrack.</p></div>
+  <div class="music-panel music-page-player" id="music-panel" aria-label="Music player">
+   <div class="music-console"><div class="music-heading"><div><span class="panel-kicker">PRESS PLAY / STAY A WHILE</span><h3>Now playing</h3></div><span class="collection-dot" aria-hidden="true"></span></div>
+   <p class="music-status" id="music-status" role="status" aria-live="polite">Choose a track to start. Sound is off.</p>
     <div class="audio-card">
       <div class="audio-art" aria-hidden="true"><span>♫</span><div class="audio-bars"><i></i><i></i><i></i><i></i><i></i></div></div>
       <div class="audio-description"><span class="audio-kicker">NOW SELECTED</span><p id="current-track">Choose your soundtrack</p><span id="playback-badge">SOUND OFF</span></div>
@@ -137,14 +128,24 @@
     <div class="seek-row"><label class="sr-only" for="seek">Seek within current song</label><input type="range" id="seek" min="0" max="1000" value="0" disabled><div class="time-row"><span id="elapsed">0:00</span><span id="duration">0:00</span></div></div>
     <div class="playback-controls"><button type="button" id="play-pause" disabled>▶ Play</button><button type="button" id="stop-music" disabled>■ Off</button><span class="repeat-label">REPEAT ONE ↻</span></div>
     <label class="volume-label" for="volume">Volume <input type="range" id="volume" min="0" max="100" value="55"><output id="volume-value" for="volume">55%</output></label>
-    <div class="track-list-area"><div class="list-heading"><span>6 TRACKS · SCROLL</span><span>YOUR SELECTION</span></div><ol class="track-list"><li><button type="button" class="track" data-index="0" aria-pressed="false"><span class="track-number">01</span><span class="track-name">Golden Brown X Love Story (slowed) Remix</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
-<li><button type="button" class="track" data-index="1" aria-pressed="false"><span class="track-number">02</span><span class="track-name">Golden Brown (Piano)</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
-<li><button type="button" class="track" data-index="2" aria-pressed="false"><span class="track-number">03</span><span class="track-name">🟣 MONTAGEM GRAVE | BRAZILIAN PHONK</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
-<li><button type="button" class="track" data-index="3" aria-pressed="false"><span class="track-number">04</span><span class="track-name">MINHA AURA Phonk</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
-<li><button type="button" class="track" data-index="4" aria-pressed="false"><span class="track-number">05</span><span class="track-name">Montagem Taca O Grave (BBEP Arafat)</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
-<li><button type="button" class="track" data-index="5" aria-pressed="false"><span class="track-number">06</span><span class="track-name">Olha na Minha Cara (Normal)</span><span class="track-mark" aria-hidden="true">▷</span></button></li></ol></div>
-    <p class="repeat-note">× closes this panel, not the music. Use Off to stop.</p>
-  </aside>
+<p class="repeat-note">Music keeps playing as you explore the site. Use Off to stop.</p></div>
+    <div class="track-list-area"><div class="list-heading"><span>THE COLLECTION / 04</span><span>CHOOSE A TRACK</span></div><ol class="track-list">
+
+<li><button type="button" class="track" data-index="0" aria-pressed="false"><span class="track-number">01</span><span class="track-name">🟣 MONTAGEM GRAVE | BRAZILIAN PHONK</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
+<li><button type="button" class="track" data-index="1" aria-pressed="false"><span class="track-number">02</span><span class="track-name">MINHA AURA Phonk</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
+<li><button type="button" class="track" data-index="2" aria-pressed="false"><span class="track-number">03</span><span class="track-name">Montagem Taca O Grave (BBEP Arafat)</span><span class="track-mark" aria-hidden="true">▷</span></button></li>
+<li><button type="button" class="track" data-index="3" aria-pressed="false"><span class="track-number">04</span><span class="track-name">Olha na Minha Cara (Normal)</span><span class="track-mark" aria-hidden="true">▷</span></button></li></ol></div>
+</div>
+ </div>
+</section>
+  </main>
+
+  <footer>
+    © 2026 BBEP Arafat. All rights reserved.
+  </footer>
+
+
+
 
 </body>
 </html>

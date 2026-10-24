@@ -1,6 +1,6 @@
 /* Same-tab screen navigation. The audio player stays mounted outside all views. */
 (() => {
-  const views = Object.fromEntries(['home', 'contact', 'cart', 'order', 'about'].map(name => [name, document.getElementById(name)]));
+  const views = Object.fromEntries(['home', 'contact', 'music', 'cart', 'order', 'about'].map(name => [name, document.getElementById(name)]));
   const headings = Object.fromEntries(Object.keys(views).map(name => [name, document.getElementById(name + '-title')]));
   let current = null;
 
@@ -18,7 +18,7 @@
       if (link.dataset.view === next) link.setAttribute('aria-current', 'page');
       else link.removeAttribute('aria-current');
     });
-    const titles = { home: 'BBEP Arafat | Official Website', contact: 'Contact Info | BBEP Arafat', cart: 'Cart | BBEP Arafat', order: 'Order Your Own Music | BBEP Arafat', about: 'About Me | BBEP Arafat' };
+    const titles = { music: 'My Music | BBEP Arafat', home: 'BBEP Arafat | Official Website', contact: 'Contact Info | BBEP Arafat', cart: 'Cart | BBEP Arafat', order: 'Order Your Own Music | BBEP Arafat', about: 'About Me | BBEP Arafat' };
     document.title = titles[next];
     if (changed) {
       void views[next].offsetWidth;
@@ -127,13 +127,11 @@
 })();
 
 
-const MUSIC_TRACKS = [{"title": "Golden Brown X Love Story (slowed) Remix", "src": "track-01.mp3"}, {"title": "Golden Brown (Piano)", "src": "track-02.mp3"}, {"title": "🟣 MONTAGEM GRAVE | BRAZILIAN PHONK", "src": "track-03.mp3"}, {"title": "MINHA AURA Phonk", "src": "track-04.mp3"}, {"title": "Montagem Taca O Grave (BBEP Arafat)", "src": "track-05.mp3"}, {"title": "Olha na Minha Cara (Normal)", "src": "track-06.mp3"}];
+const MUSIC_TRACKS = [{"title": "🟣 MONTAGEM GRAVE | BRAZILIAN PHONK", "src": "track-03.mp3"}, {"title": "MINHA AURA Phonk", "src": "track-04.mp3"}, {"title": "Montagem Taca O Grave (BBEP Arafat)", "src": "track-05.mp3"}, {"title": "Olha na Minha Cara (Normal)", "src": "track-06.mp3"}];
 
 (() => {
   const audio = document.getElementById('music-audio');
   const panel = document.getElementById('music-panel');
-  const toggle = document.getElementById('music-toggle');
-  const close = document.getElementById('close-music');
   const status = document.getElementById('music-status');
   const playPause = document.getElementById('play-pause');
   const stop = document.getElementById('stop-music');
@@ -147,25 +145,6 @@ const MUSIC_TRACKS = [{"title": "Golden Brown X Love Story (slowed) Remix", "src
   let selected = -1, mode = 'off', request = 0;
   audio.volume = Number(volume.value) / 100;
   audio.loop = true;
-
-  function showPanel() {
-    panel.hidden = false;
-    panel.scrollTop = 0;
-    toggle.setAttribute('aria-expanded', 'true');
-    toggle.setAttribute('aria-label', 'Close music panel; music keeps playing');
-  }
-  function hidePanel() {
-    // Only the panel is hidden. Do not pause, unload or destroy the audio.
-    panel.hidden = true;
-    toggle.setAttribute('aria-expanded', 'false');
-    toggle.setAttribute('aria-label', audio.paused ? 'Open music player' : 'Open music player; music is playing');
-    toggle.focus();
-  }
-  toggle.addEventListener('click', () => panel.hidden ? showPanel() : hidePanel());
-  close.addEventListener('click', hidePanel);
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && !panel.hidden) hidePanel();
-  });
 
   function timeLabel(seconds) {
     if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
@@ -184,7 +163,6 @@ const MUSIC_TRACKS = [{"title": "Golden Brown X Love Story (slowed) Remix", "src
     playPause.disabled = selected < 0;
     stop.disabled = mode === 'off' && audio.paused;
     playPause.textContent = playing ? 'Ⅱ Pause' : '▶ Play';
-    toggle.classList.toggle('is-playing', playing);
     panel.classList.toggle('is-audio-playing', playing);
     document.body.classList.toggle('music-on', playing);
     badge.textContent = { off:'SOUND OFF', loading:'LOADING', playing:'PLAYING · REPEAT ONE', paused:'PAUSED', error:'UNAVAILABLE' }[mode];
@@ -196,9 +174,8 @@ const MUSIC_TRACKS = [{"title": "Golden Brown X Love Story (slowed) Remix", "src
     if (message) status.textContent = message;
     else if (mode === 'off') status.textContent = 'Music is off. Choose a track or press Play.';
     else if (mode === 'loading') status.textContent = 'Loading your soundtrack…';
-    else if (mode === 'playing') status.textContent = 'Music keeps playing when you close this panel.';
+    else if (mode === 'playing') status.textContent = 'Playing. Explore the site without interrupting your music.';
     else if (mode === 'paused') status.textContent = 'Paused. Press Play to continue.';
-    if (panel.hidden) toggle.setAttribute('aria-label', playing ? 'Open music player; music is playing' : 'Open music player');
   }
   async function startPlayback() {
     const token = ++request;
