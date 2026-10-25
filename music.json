@@ -1,18 +1,32 @@
 [
   {
+    "id": "track-03.mp3",
     "title": "🟣 MONTAGEM GRAVE | BRAZILIAN PHONK",
-    "src": "track-03.mp3"
+    "src": "track-03.mp3",
+    "genre": ""
   },
   {
+    "id": "track-04.mp3",
     "title": "MINHA AURA Phonk",
-    "src": "track-04.mp3"
+    "src": "track-04.mp3",
+    "genre": ""
   },
   {
+    "id": "track-05.mp3",
     "title": "Montagem Taca O Grave (BBEP Arafat)",
-    "src": "track-05.mp3"
+    "src": "track-05.mp3",
+    "genre": ""
   },
   {
+    "id": "track-06.mp3",
     "title": "Olha na Minha Cara (Normal)",
-    "src": "track-06.mp3"
+    "src": "track-06.mp3",
+    "genre": ""
+  },
+  {
+    "id": "7eb0c5d7-892b-41e5-8e37-dd8e43360e22",
+    "title": "MONTAGEM NOCTARAF",
+    "src": "audio/7eb0c5d7-892b-41e5-8e37-dd8e43360e22.mp3",
+    "genre": "Phonk"
   }
 ]
