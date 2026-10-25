@@ -141,7 +141,7 @@ const MUSIC_TRACKS = [{"title": "🟣 MONTAGEM GRAVE | BRAZILIAN PHONK", "src": 
   const duration = document.getElementById('duration');
   const currentTrack = document.getElementById('current-track');
   const badge = document.getElementById('playback-badge');
-  const rows = [...document.querySelectorAll('.track')];
+  let rows = [...document.querySelectorAll('.track')];
   let selected = -1, mode = 'off', request = 0;
   audio.volume = Number(volume.value) / 100;
   audio.loop = true;
@@ -192,6 +192,7 @@ const MUSIC_TRACKS = [{"title": "🟣 MONTAGEM GRAVE | BRAZILIAN PHONK", "src": 
         : 'This audio could not load. Check that the MP3 files were uploaded next to index.html.');
     }
   }
+  function bindTracks(){
   rows.forEach((row, i) => row.addEventListener('click', () => {
     if (selected !== i || !audio.getAttribute('src')) {
       ++request; mode = 'loading'; audio.pause();
@@ -202,6 +203,8 @@ const MUSIC_TRACKS = [{"title": "🟣 MONTAGEM GRAVE | BRAZILIAN PHONK", "src": 
     startPlayback();
     panel.scrollTop = 0;
   }));
+  }
+  bindTracks();
   playPause.addEventListener('click', () => {
     if (selected < 0) return;
     if (!audio.paused && mode !== 'loading') {
@@ -223,7 +226,7 @@ const MUSIC_TRACKS = [{"title": "🟣 MONTAGEM GRAVE | BRAZILIAN PHONK", "src": 
   });
   audio.addEventListener('error', () => {
     if (mode === 'off') return;
-    mode = 'error'; render('This audio could not load. Check that all six MP3 files were uploaded next to index.html.');
+    mode = 'error'; render('This audio could not load. Check that the song file is available on the website.');
   });
   audio.addEventListener('timeupdate', updateTime);
   audio.addEventListener('loadedmetadata', updateTime);
@@ -238,6 +241,19 @@ const MUSIC_TRACKS = [{"title": "🟣 MONTAGEM GRAVE | BRAZILIAN PHONK", "src": 
       updateTime();
     }
   });
+  async function loadPublishedTracks(){
+    try{
+      const response=await fetch('music.json',{cache:'no-store'});if(!response.ok)return;
+      const list=await response.json();
+      if(!Array.isArray(list)||list.length>1000||!list.every(t=>t&&typeof t.title==='string'&&t.title.length<=180&&typeof t.src==='string'&&/^(?:[\w-]+\/)*[\w.-]+\.mp3$/i.test(t.src)&&!t.src.includes('..')))return;
+      MUSIC_TRACKS.splice(0,MUSIC_TRACKS.length,...list);
+      const container=document.querySelector('.track-list');container.replaceChildren();
+      list.forEach((track,i)=>{const li=document.createElement('li'),button=document.createElement('button');button.type='button';button.className='track';button.dataset.index=i;button.setAttribute('aria-pressed','false');for(const [cls,text]of [['track-number',String(i+1).padStart(2,'0')],['track-name',track.title+(track.genre?' · '+track.genre:'')],['track-mark','▷']]){const span=document.createElement('span');span.className=cls;span.textContent=text;if(cls==='track-mark')span.setAttribute('aria-hidden','true');button.append(span);}li.append(button);container.append(li);});
+      rows=[...container.querySelectorAll('.track')];bindTracks();
+      document.querySelector('.list-heading span').textContent='THE COLLECTION / '+String(list.length).padStart(2,'0');render();
+    }catch{/* Original songs remain available if the manifest is temporarily unreachable. */}
+  }
+  loadPublishedTracks();
   render();
 })();
 
